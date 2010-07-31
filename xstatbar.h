@@ -35,11 +35,12 @@ typedef struct xinfo {
    unsigned int   width;
    unsigned int   height;
 } xinfo_t;
+extern xinfo_t XINFO;
 
 
 /* the actual x-color object globals */
-XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
-       COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-       COLOR_WHITE,  COLOR_BLACK;
+extern XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
+              COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
+              COLOR_WHITE,  COLOR_BLACK;
 
 #endif

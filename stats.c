@@ -16,6 +16,13 @@
 
 #include "stats.h"
 
+/* extern's from stats.h */
+volume_info_t volume;
+power_info_t power;
+sysinfo_t sysinfo;
+brightness_info_t brightness;
+
+
 /* draw text in a given color at a given (x,y) */
 int
 render_text(XColor c, int x, int y, const char *str)

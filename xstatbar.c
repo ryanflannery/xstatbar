@@ -26,8 +26,12 @@
 #include "xstatbar.h"
 #include "stats.h"
 
-/* global xinfo object */
+/* extern's from xstatbar.h */
 xinfo_t  XINFO;
+XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
+       COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
+       COLOR_WHITE,  COLOR_BLACK;
+
 
 
 void cleanup(int sig);

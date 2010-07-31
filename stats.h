@@ -37,15 +37,13 @@
 
 #include "xstatbar.h"
 
-extern xinfo_t XINFO;
-
 /*
  * The following are all global structs used to record the various stats
  * queried by xstatbar.
  */
 
 /* volume */
-struct volume_info_t {
+typedef struct {
    bool  is_setup;
 
    int   dev_fd;
@@ -55,19 +53,19 @@ struct volume_info_t {
    int   nchan;
    int   left;
    int   right;
-};
-struct volume_info_t volume;
+} volume_info_t;
+extern volume_info_t volume;
 
 /* power */
-struct power_info_t {
+typedef struct {
    bool   is_setup;
    int    dev_fd;
    struct apm_power_info   info;
-};
-struct power_info_t power;
+} power_info_t;
+extern power_info_t power;
 
 /* system info (cpu + memory + proccess info) */
-struct sysinfo_t {
+typedef struct {
    int       ncpu;         /* # of cpu's present */
    int       pageshift;    /* used to properly calculate memory stats */
 
@@ -89,14 +87,14 @@ struct sysinfo_t {
    int        **memory;    /* [hist_size][3] */
    int      ***cpu_pcnts;  /* [ncpu][hist_size][CPUSTATES] */
    uint64_t ***cpu_raw;    /* [ncpu][hist_size][CPUSTATES] */
-};
-struct sysinfo_t sysinfo;
+} sysinfo_t;
+extern sysinfo_t sysinfo;
 
 /* brightness - FIXME still working on this part */
-struct brightness_info_t {
+typedef struct {
    int   brightness;
-};
-struct brightness_info_t brightness;
+} brightness_info_t;
+extern brightness_info_t brightness;
 
 
 /*
