@@ -37,9 +37,6 @@
 
 #include "xstatbar.h"
 
-/* the following is from top(1) code */
-extern int ncpu;
-
 extern xinfo_t XINFO;
 
 /*

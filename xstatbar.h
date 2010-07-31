@@ -42,7 +42,4 @@ XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
        COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
        COLOR_WHITE,  COLOR_BLACK;
 
-/* this is created/used by the top(1) code */
-extern int ncpu;
-
 #endif
