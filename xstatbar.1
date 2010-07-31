@@ -12,6 +12,8 @@
 .Op Fl h Ar height
 .Op Fl f Ar font
 .Bk -words
+.Op Fl t Ar time-format
+.Op Fl T
 .Op Fl s Ar seconds
 .Ek
 .Sh DESCRIPTION
@@ -92,6 +94,12 @@ Specify the font to use when displaying any text.  The default is whatever
 The number of seconds to sleep between updating the stats displayed.
 .Pp
 The default is 1.
+.It Fl t Ar time-format
+Specify the format for the time to be displayed in.  Any string acceptable by
+.Xr strftime 3
+is acceptable.
+.It Fl T
+Use the default format for displaying the time but with a 24-hour format.
 .Sh EXAMPLES
 To display
 .Nm
@@ -118,6 +126,7 @@ the display, and this is where
 would be displayed.
 .Sh SEE ALSO
 .Xr scrotwm 1 ,
+.Xr strftime 3 ,
 .Xr XLoadQueryFont 3 .
 .Sh AUTHORS
 .Nm

@@ -1,5 +1,4 @@
 Todo now (for integrating into scrotwm)
-   3. add flag to customize strftime(3) flag
    4. patch into scrotwm
          -> has bug w/ handling regions, can't figure out (April 2010)
          -> F*&$! the regions bug is bad (Jul 2010)

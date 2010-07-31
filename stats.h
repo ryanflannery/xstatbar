@@ -96,6 +96,9 @@ typedef struct {
 } brightness_info_t;
 extern brightness_info_t brightness;
 
+/* the format used by strftime(3) */
+extern char *time_fmt;
+
 
 /*
  * The following are used to initialize, update, and end the querying of

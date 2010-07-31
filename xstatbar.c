@@ -55,10 +55,11 @@ main (int argc, char *argv[])
    w = 1280;
    h = 13;
    font = "*-fixed-*-9-*";
+   time_fmt = "%a %d %b %Y %I:%M:%S %p";
    sleep_seconds = 1;
 
    /* parse command line */
-   while ((ch = getopt(argc, argv, "x:y:w:h:s:f:")) != -1) {
+   while ((ch = getopt(argc, argv, "x:y:w:h:s:f:t:T")) != -1) {
       switch (ch) {
          case 'x':
             x = strtonum(optarg, 0, INT_MAX, &errstr);
@@ -93,7 +94,17 @@ main (int argc, char *argv[])
          case 'f':
             font = strdup(optarg);
             if (font == NULL)
-               err(1, "failed to alloc font");
+               err(1, "failed to strdup(3) font");
+            break;
+
+         case 't':
+            time_fmt = strdup(optarg);
+            if (time_fmt == NULL)
+               err(1, "failed to strdup(3) time format");
+            break;
+
+         case 'T':
+            time_fmt = "%a %d %b %Y %H:%M:%S";
             break;
 
          case '?':
@@ -139,7 +150,7 @@ usage(const char *pname)
 {
    fprintf(stderr, "\
 usage: %s [-x xoffset] [-y yoffset] [-w width] [-h height] [-s secs]\n\
-          [-f font]\n",
+          [-f font] [-t time-format] [-T]\n",
    pname);
    exit(0);
 }

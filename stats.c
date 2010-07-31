@@ -21,6 +21,7 @@ volume_info_t volume;
 power_info_t power;
 sysinfo_t sysinfo;
 brightness_info_t brightness;
+char *time_fmt;
 
 
 /* draw text in a given color at a given (x,y) */
@@ -685,11 +686,8 @@ time_draw(XColor color, int x, int y)
    time_t now = time(NULL);
    int width;
 
-   /* TODO make the format given to strftime(3) here customizable */
-
    /* first build the string */
-   strftime(timestr, sizeof(timestr), "%a %d %b %Y %I:%M:%S %p",
-      localtime(&now));
+   strftime(timestr, sizeof(timestr), time_fmt, localtime(&now));
 
    /* XXX hack to right-align it - rethink a more general way for this */
    width = XTextWidth(XINFO.font, timestr, strlen(timestr));
