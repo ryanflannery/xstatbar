@@ -1,0 +1,16 @@
+Todo now (for integrating into scrotwm)
+   3. add flag to customize strftime(3) flag
+   4. patch into scrotwm
+         -> has bug w/ handling regions, can't figure out (April 2010)
+   5. document that swap usage is shown only if it's used
+
+List of stuff to add when i ... well, care enough to do so...
+
+   *  If volume is muted, indicate that somehow...
+
+   *  ADD/FIX brightness... still dunno "which" brightness to query/collect
+      (the Xrandr one via xbacklight, or the "other" one controlled by my
+      laptop-buttons.  they appear to be different)
+
+   *  ADD just a quick glance at network activity of each if (??) 
+

@@ -1,0 +1,132 @@
+.Dd March 16, 2009
+.Dt xstatbar 1
+.Os
+.Sh NAME
+.Nm xstatbar
+.Nd A system information display bar for X11
+.Sh SYNOPSIS
+.Nm xstatbar
+.Op Fl x Ar offset
+.Op Fl y Ar offset
+.Op Fl w Ar width
+.Op Fl h Ar height
+.Op Fl f Ar font
+.Bk -words
+.Op Fl s Ar seconds
+.Ek
+.Sh DESCRIPTION
+.Nm
+displays an overview of basic system information (CPU usage, etc.), and
+additional information that is usefull on many laptops such as volume,
+battery life, and more.  The display tries to be as minimal as possible,
+while still providing a good overview of things.
+.Pp
+The window that
+.Nm
+uses is not part of any tab-order by most window managers, has no
+decorations, and will persist across multiple workspaces.
+.Pp
+The information displayed by
+.Nm
+is:
+.Pp
+.Bl -bullet -compact
+.It
+For each CPU, a graph of the last 60 seconds of usage followed by the current
+breakdown, similar to what you find in
+.Xr top 1 .
+.It
+A graph of memory usage for the last 60 seconds, followed by the current
+breakdown, again, similar to what is found in
+.Xr top 1 .
+.It
+Swap usage (no graph).
+.It
+Number of active and total processes.
+.It
+Power information, including if AC is the current source, or the BATtery,
+followed by a graph of the estimated remaining power, and an estimate of
+the amount of time (in minutes) remaining before the battery is drained.
+.It
+Left and right volume levels, including graphs.
+.It
+Current date and time.
+.El
+.Pp
+Note that the above stats are displayed in the order listed, from left to
+right, with the exception of the date and time.  That is displayed
+right-justified in the display.
+.Sh OPTIONS
+Please note that
+.Nm
+is not highly configurable.  Only basics about the display (window position,
+size, and font used) are configurable.  For anything more complicated, simply
+edit the source.
+.Pp
+The following options are supported:
+.Bl -tag -width Fl
+.It Fl x Ar offset
+The x coordinate, in pixels, of the upper-left corner of the window.
+.Pp
+The default is 0.
+.It Fl y Ar offset
+The y coordinate, in pixels, of the upper-left corner of the window.
+.Pp
+The default is 0.
+.It Fl w Ar width
+The width of the window to use, specified in pixels.  Only use this if you
+want to limit
+.Nm 's
+display even further.
+.Pp
+The default is 1280.
+.It Fl h Ar height
+The width of the window to use, specified in pixels.
+.Pp
+The default is 13.
+.It Fl f Ar font
+Specify the font to use when displaying any text.  The default is whatever
+"fixed" defaults to through
+.Xr XLoadQueryFont 3 .
+.It Fl s Ar seconds
+The number of seconds to sleep between updating the stats displayed.
+.Pp
+The default is 1.
+.Sh EXAMPLES
+To display
+.Nm
+at the bottom of your display, assuming a 1280x800 display, use something
+like the following:
+.Pp
+.Dl $ xstatbar -y 785
+.Pp
+If you are using a window manager such as
+.Xr scrotwm 1 ,
+you can then setup that region of your screen as "off-limits" for windows to
+be placed, by adding the following to your
+.Xr scrotwm 1
+configuration:
+.Pp
+.Dl region = screen[1]:1280x785+0+0
+.Pp
+This instructs
+.Xr scrotwm 1
+to use only the region specified (for the default screen in multi-head setups)
+for all other windows.  Note that 15 pixels are "removed" from the bottom of
+the display, and this is where
+.Nm
+would be displayed.
+.Sh SEE ALSO
+.Xr scrotwm 1 ,
+.Xr XLoadQueryFont 3 .
+.Sh AUTHORS
+.Nm
+was written by
+.An Ryan Flannery Aq ryan.flannery@gmail.com .
+.Sh CAVEATS
+As stated above, none of the actual stats, or their formatting, is
+configurable via command line options.  Please stop asking me this.
+.Sh BUGS
+None known.  If you find any, please send a detailed description to me at
+<ryan.flannery@gmail.com>.
+
