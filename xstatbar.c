@@ -33,8 +33,14 @@ XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
        COLOR_WHITE,  COLOR_BLACK;
 
 
+/* signal flags */
+volatile sig_atomic_t VSIG_QUIT = 0;
 
-void cleanup(int sig);
+
+/* local functions */
+void signal_handler(int sig);
+void process_signals();
+void cleanup();
 void usage(const char *pname);
 void setup_x(int x, int y, int w, int h, const char *font);
 void draw();
@@ -124,9 +130,12 @@ main (int argc, char *argv[])
    setup_x(x, y, w, h, font);
 
    /* shutdown function */
-   signal(SIGINT, cleanup);
+   signal(SIGINT,  signal_handler);
 
    while (1) {
+
+      /* handle any signals */
+      process_signals();
 
       /* update stats */
       volume_update();
@@ -155,9 +164,33 @@ usage: %s [-x xoffset] [-y yoffset] [-w width] [-h height] [-s secs]\n\
    exit(0);
 }
 
+/* signal handlers */
+void
+signal_handler(int sig)
+{
+   switch (sig) {
+      case SIGHUP:
+      case SIGINT:
+      case SIGQUIT:
+      case SIGTERM:
+         VSIG_QUIT = 1;
+         break;
+   }
+}
+
+void
+process_signals()
+{
+   if (VSIG_QUIT) {
+      cleanup();
+      VSIG_QUIT = 0;
+   }
+
+}
+
 /* exit handler */
 void
-cleanup(int sig)
+cleanup()
 {
    /* x teardown */
    XClearWindow(XINFO.disp,   XINFO.win);
