@@ -1,8 +1,8 @@
 Todo now (for integrating into scrotwm)
+
    4. patch into scrotwm
          -> has bug w/ handling regions, can't figure out (April 2010)
          -> F*&$! the regions bug is bad (Jul 2010)
-   5. document that swap usage is shown only if it's used
 
 List of stuff to add when i ... well, care enough to do so...
 
