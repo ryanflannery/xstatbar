@@ -58,7 +58,7 @@ main (int argc, char *argv[])
    /* set defaults */
    x = 0;
    y = 0;
-   w = 1280;
+   w = 0;
    h = 13;
    font = "*-fixed-*-9-*";
    time_fmt = "%a %d %b %Y %I:%M:%S %p";
@@ -244,7 +244,7 @@ setup_x(int x, int y, int w, int h, const char *font)
 
    /* setup various defaults/settings */
    XINFO.screen = DefaultScreen(XINFO.disp);
-   XINFO.width  = w;
+   XINFO.width  = w ? w : DisplayWidth(XINFO.disp, XINFO.screen);
    XINFO.height = h;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
