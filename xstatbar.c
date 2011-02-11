@@ -235,6 +235,8 @@ void
 setup_x(int x, int y, int w, int h, const char *font)
 {
    XSetWindowAttributes x11_window_attributes;
+   Atom type;
+   unsigned long struts[12];
 
    /* open display */
    if (!(XINFO.disp = XOpenDisplay(NULL)))
@@ -246,7 +248,7 @@ setup_x(int x, int y, int w, int h, const char *font)
    XINFO.height = h;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
-   x11_window_attributes.override_redirect = 1;
+   x11_window_attributes.override_redirect = 0;
 
    /* create window */
    XINFO.win = XCreateWindow(
@@ -260,6 +262,25 @@ setup_x(int x, int y, int w, int h, const char *font)
 
 	 XINFO.xftdraw = XftDrawCreate(XINFO.disp, XINFO.win, DefaultVisual(XINFO.disp,XINFO.screen),
 			                DefaultColormap( XINFO.disp, XINFO.screen ) );
+   
+	 /* setup window manager hints */
+   type = XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
+   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE", False),
+		   XA_ATOM, 32, PropModeReplace, (unsigned char*)&type, 1);
+   bzero(struts, sizeof(struts));
+   enum { left, right, top, bottom, left_start_y, left_end_y, right_start_y,
+	  right_end_y, top_start_x, top_end_x, bottom_start_x, bottom_end_x };
+   if (y <= DisplayHeight(XINFO.disp, XINFO.screen)/2) {
+	   struts[top] = y + XINFO.height;
+	   struts[top_start_x] = x;
+	   struts[top_end_x] = x + XINFO.width;
+   } else {
+	   struts[bottom] = DisplayHeight(XINFO.disp, XINFO.screen) - y;
+	   struts[bottom_start_x] = x;
+	   struts[bottom_end_x] = x + XINFO.width;
+   }
+   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_STRUT_PARTIAL", False),
+		   XA_CARDINAL, 32, PropModeReplace, (unsigned char*)struts, 12);
 
    /* setup font */
    XINFO.font = XftFontOpenName(XINFO.disp, XINFO.screen, font); 
@@ -269,7 +290,8 @@ setup_x(int x, int y, int w, int h, const char *font)
    /* connect window to display */
    XMapWindow(XINFO.disp, XINFO.win);
 
-	 setup_colors();
+   XMoveWindow(XINFO.disp, XINFO.win, x, y);
+   setup_colors();
 }
 
 /* draw all stats */
