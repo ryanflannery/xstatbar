@@ -439,18 +439,18 @@ sysinfo_update()
    /* get swap status */
    sysinfo.swap_used = sysinfo.swap_total = 0;
    if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) == 0) {
-	   if ((swapdev = calloc(nswaps, sizeof(*swapdev))) == NULL)
-		  err(1, "sysinfo update: swapdev calloc failed (%d)", nswaps);
-	   if (swapctl(SWAP_STATS, swapdev, nswaps) == -1)
-		  err(1, "sysinfo update: swapctl(SWAP_STATS) failed");
+      if ((swapdev = calloc(nswaps, sizeof(*swapdev))) == NULL)
+        err(1, "sysinfo update: swapdev calloc failed (%d)", nswaps);
+      if (swapctl(SWAP_STATS, swapdev, nswaps) == -1)
+        err(1, "sysinfo update: swapctl(SWAP_STATS) failed");
 
-	   for (size = 0; size < nswaps; size++) {
-		  if (swapdev[size].se_flags & SWF_ENABLE) {
-			 sysinfo.swap_used  += swapdev[size].se_inuse / (1024 / DEV_BSIZE);
-			 sysinfo.swap_total += swapdev[size].se_nblks / (1024 / DEV_BSIZE);
-		  }
-	   }
-	   free(swapdev);
+      for (size = 0; size < nswaps; size++) {
+        if (swapdev[size].se_flags & SWF_ENABLE) {
+          sysinfo.swap_used  += swapdev[size].se_inuse / (1024 / DEV_BSIZE);
+          sysinfo.swap_total += swapdev[size].se_nblks / (1024 / DEV_BSIZE);
+        }
+      }
+      free(swapdev);
    }
 
    /* get states for each cpu. note this is raw # of ticks */

@@ -1,16 +1,7 @@
-Todo now (for integrating into scrotwm)
+Things to fix/add:
 
-   4. patch into scrotwm
-         -> has bug w/ handling regions, can't figure out (April 2010)
-         -> F*&$! the regions bug is bad (Jul 2010)
-
-List of stuff to add when i ... well, care enough to do so...
-
-   *  If volume is muted, indicate that somehow...
-
-   *  ADD/FIX brightness... still dunno "which" brightness to query/collect
-      (the Xrandr one via xbacklight, or the "other" one controlled by my
-      laptop-buttons.  they appear to be different)
-
-   *  ADD just a quick glance at network activity of each if (??) 
-
+ * If volume is muted, indicate that somehow...
+ * AC remaining time should not be negative on full charge.
+ * Show cpu frequency;
+ * Somehow compress the output (to fit small screens on multi-core machines);
+ * Make xstatbar output more configurable (how???).
