@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2009 Ryan Flannery <ryan.flannery@gmail.com>
  *  audio/volume by   Jacob Meuser <jakemsr@sdf.lonestar.org>
+ *  patch by         Antoine Jacoutot <ajacoutot@openbsd.org>
+ *  misc updates by  Dmitrij D. Czarkoff <czarkoff@gmail.cim>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -102,8 +104,10 @@ volume_init()
    devinfo.index = 0;
    while (ioctl(volume.dev_fd, AUDIO_MIXER_DEVINFO, &devinfo) >= 0) {
 
-      if (devinfo.type != AUDIO_MIXER_CLASS)
+      if (devinfo.type != AUDIO_MIXER_CLASS) {
+         devinfo.index++;
          continue;
+	  }
 
       if (strncmp(devinfo.label.name, AudioCoutputs, MAX_AUDIO_DEV_LEN) == 0)
          oclass_idx = devinfo.index;
