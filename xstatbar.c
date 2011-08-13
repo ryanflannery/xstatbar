@@ -4,7 +4,6 @@
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
  * copyright notice and this permission notice appear in all copies.
- *
  * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
  * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
  * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
@@ -59,7 +58,7 @@ main (int argc, char *argv[])
    /* set defaults */
    x = 0;
    y = 0;
-   w = 0;
+   w = 1280;
    h = 13;
    font = "*-fixed-*-9-*";
    time_fmt = "%a %d %b %Y %I:%M:%S %p";
@@ -238,8 +237,6 @@ void
 setup_x(int x, int y, int w, int h, const char *font)
 {
    XSetWindowAttributes x11_window_attributes;
-   Atom type;
-   int struts[12];
 
    /* open display */
    if (!(XINFO.disp = XOpenDisplay(NULL)))
@@ -247,12 +244,12 @@ setup_x(int x, int y, int w, int h, const char *font)
 
    /* setup various defaults/settings */
    XINFO.screen = DefaultScreen(XINFO.disp);
-   XINFO.width  = w ? w : DisplayWidth(XINFO.disp, XINFO.screen);
+   XINFO.width  = w;
    XINFO.height = h;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    XINFO.gc     = DefaultGC(XINFO.disp, XINFO.screen);
-   x11_window_attributes.override_redirect = 0;
+   x11_window_attributes.override_redirect = 1;
 
    /* create window */
    XINFO.win = XCreateWindow(
@@ -263,25 +260,6 @@ setup_x(int x, int y, int w, int h, const char *font)
       CopyFromParent, InputOutput, XINFO.vis,
       CWOverrideRedirect, &x11_window_attributes
    );
-
-   /* setup window manager hints */
-   type = XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
-   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE", False),
-		   XA_ATOM, 32, PropModeReplace, (unsigned char*)&type, 1);
-   bzero(struts, 12*sizeof(int));
-   enum { left, right, top, bottom, left_start_y, left_end_y, right_start_y,
-	  right_end_y, top_start_x, top_end_x, bottom_start_x, bottom_end_x };
-   if (y <= DisplayHeight(XINFO.disp, XINFO.screen)/2) {
-	   struts[top] = y + XINFO.height;
-	   struts[top_start_x] = x;
-	   struts[top_end_x] = x + XINFO.width;
-   } else {
-	   struts[bottom] = DisplayHeight(XINFO.disp, XINFO.screen) - y;
-	   struts[bottom_start_x] = x;
-	   struts[bottom_end_x] = x + XINFO.width;
-   }
-   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_STRUT_PARTIAL", False),
-		   XA_CARDINAL, 32, PropModeReplace, (unsigned char*)struts, 12);
 
    /* create pixmap used for double buffering */
    XINFO.buf = XCreatePixmap(
