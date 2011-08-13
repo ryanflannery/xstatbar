@@ -322,8 +322,9 @@ power_draw(XColor color, int x, int y)
    x += width + 1;
 
    /* draw the percent and time remaining */
-   snprintf(str, sizeof(str), "(%d%%,%dm)",
-      power.info.battery_life, power.info.minutes_left);
+   
+   snprintf(str, sizeof(str), (power.info.minutes_left != (u_int)-1) ? "(%d%%,%dm)"
+      : "(%d%%)", power.info.battery_life, power.info.minutes_left);
 
    x += render_text(color, x, y, str);
    return x - startx;
