@@ -1,6 +1,8 @@
 /*
  * Copyright (c) 2009 Ryan Flannery <ryan.flannery@gmail.com>
  *  audio/volume by   Jacob Meuser <jakemsr@sdf.lonestar.org>
+ *  patch by         Antoine Jacoutot <ajacoutot@openbsd.org>
+ *  misc updates by  Dmitrij D. Czarkoff <czarkoff@gmail.cim>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -102,8 +104,10 @@ volume_init()
    devinfo.index = 0;
    while (ioctl(volume.dev_fd, AUDIO_MIXER_DEVINFO, &devinfo) >= 0) {
 
-      if (devinfo.type != AUDIO_MIXER_CLASS)
+      if (devinfo.type != AUDIO_MIXER_CLASS) {
+         devinfo.index++;
          continue;
+	  }
 
       if (strncmp(devinfo.label.name, AudioCoutputs, MAX_AUDIO_DEV_LEN) == 0)
          oclass_idx = devinfo.index;
@@ -318,8 +322,9 @@ power_draw(XColor color, int x, int y)
    x += width + 1;
 
    /* draw the percent and time remaining */
-   snprintf(str, sizeof(str), "(%d%%,%dm)",
-      power.info.battery_life, power.info.minutes_left);
+   
+   snprintf(str, sizeof(str), (power.info.minutes_left != (u_int)-1) ? "(%d%%,%dm)"
+      : "(%d%%)", power.info.battery_life, power.info.minutes_left);
 
    x += render_text(color, x, y, str);
    return x - startx;
@@ -437,21 +442,21 @@ sysinfo_update()
    sysinfo.memory[cur][MEM_FRE] = vminfo.t_free << sysinfo.pageshift;
 
    /* get swap status */
-   if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) == 0)
-      errx(1, "swapctl(SWAP_NSWAP) failed... this shouldn't happen");
-   if ((swapdev = calloc(nswaps, sizeof(*swapdev))) == NULL)
-      err(1, "sysinfo update: swapdev calloc failed (%d)", nswaps);
-   if (swapctl(SWAP_STATS, swapdev, nswaps) == -1)
-      err(1, "sysinfo update: swapctl(SWAP_STATS) failed");
-
    sysinfo.swap_used = sysinfo.swap_total = 0;
-   for (size = 0; size < nswaps; size++) {
-      if (swapdev[size].se_flags & SWF_ENABLE) {
-         sysinfo.swap_used  += swapdev[size].se_inuse / (1024 / DEV_BSIZE);
-         sysinfo.swap_total += swapdev[size].se_nblks / (1024 / DEV_BSIZE);
+   if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) == 0) {
+      if ((swapdev = calloc(nswaps, sizeof(*swapdev))) == NULL)
+        err(1, "sysinfo update: swapdev calloc failed (%d)", nswaps);
+      if (swapctl(SWAP_STATS, swapdev, nswaps) == -1)
+        err(1, "sysinfo update: swapctl(SWAP_STATS) failed");
+
+      for (size = 0; size < nswaps; size++) {
+        if (swapdev[size].se_flags & SWF_ENABLE) {
+          sysinfo.swap_used  += swapdev[size].se_inuse / (1024 / DEV_BSIZE);
+          sysinfo.swap_total += swapdev[size].se_nblks / (1024 / DEV_BSIZE);
+        }
       }
+      free(swapdev);
    }
-   free(swapdev);
 
    /* get states for each cpu. note this is raw # of ticks */
    size = CPUSTATES * sizeof(int64_t);
