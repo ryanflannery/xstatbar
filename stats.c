@@ -700,3 +700,14 @@ time_draw(XColor color, int x, int y)
    return render_text(color, XINFO.width - width, y, timestr);
 }
 
+int
+border_draw(XColor color, int x, int y)
+{
+   int bw = XINFO.border;
+   if (!bw)
+	return 0;
+   XSetForeground(XINFO.disp, XINFO.gc, color.pixel);
+   XSetLineAttributes(XINFO.disp, XINFO.gc, bw, LineSolid, CapNotLast, JoinMiter);
+   XDrawRectangle(XINFO.disp, XINFO.buf, XINFO.gc, bw/2, bw/2, XINFO.width-bw, XINFO.height-bw);
+   return 0;
+}

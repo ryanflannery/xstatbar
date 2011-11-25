@@ -135,5 +135,6 @@ int  cpu_draw(int cpu, XColor c, int x, int y);
 int  mem_draw(XColor c, int x, int y);
 int  procs_draw(XColor c, int x, int y);
 int  time_draw(XColor c, int x, int y);
+int  border_draw(XColor c, int x, int y);
 
 #endif

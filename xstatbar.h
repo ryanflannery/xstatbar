@@ -38,6 +38,7 @@ typedef struct xinfo {
    int            depth;
    unsigned int   width;
    unsigned int   height;
+   unsigned int   border;
 } xinfo_t;
 extern xinfo_t XINFO;
 

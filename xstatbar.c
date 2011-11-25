@@ -42,7 +42,7 @@ void signal_handler(int sig);
 void process_signals();
 void cleanup();
 void usage(const char *pname);
-void setup_x(int x, int y, int w, int h, const char *font);
+void setup_x(int x, int y, int w, int h, int b, const char *font);
 void draw();
 
 
@@ -52,7 +52,7 @@ main (int argc, char *argv[])
    const char *errstr;
    char *font;
    char  ch;
-   int   x, y, w, h;
+   int   x, y, w, h, b;
    int   sleep_seconds;
 
    /* set defaults */
@@ -60,13 +60,20 @@ main (int argc, char *argv[])
    y = 0;
    w = 0;
    h = 13;
+   b = 0;
    font = "*-fixed-*-9-*";
    time_fmt = "%a %d %b %Y %I:%M:%S %p";
    sleep_seconds = 1;
 
    /* parse command line */
-   while ((ch = getopt(argc, argv, "x:y:w:h:s:f:t:T")) != -1) {
+   while ((ch = getopt(argc, argv, "b:x:y:w:h:s:f:t:T")) != -1) {
       switch (ch) {
+	 case 'b':
+            b = strtonum(optarg, 0, INT_MAX, &errstr);
+            if (errstr)
+               errx(1, "illegal b value \"%s\": %s", optarg, errstr);
+            break;
+
          case 'x':
             x = strtonum(optarg, 0, INT_MAX, &errstr);
             if (errstr)
@@ -127,7 +134,7 @@ main (int argc, char *argv[])
    sysinfo_init(45);
 
    /* setup X window */
-   setup_x(x, y, w, h, font);
+   setup_x(x, y, w, h, b, font);
 
    /* shutdown function */
    signal(SIGINT,  signal_handler);
@@ -258,7 +265,7 @@ setup_colors()
 
 /* setup x window */
 void
-setup_x(int x, int y, int w, int h, const char *font)
+setup_x(int x, int y, int w, int h, int b, const char *font)
 {
    XSetWindowAttributes x11_window_attributes;
    Atom type;
@@ -274,6 +281,7 @@ setup_x(int x, int y, int w, int h, const char *font)
    XINFO.screen = DefaultScreen(XINFO.disp);
    XINFO.width  = w ? w : DisplayWidth(XINFO.disp, XINFO.screen);
    XINFO.height = h;
+   XINFO.border = b;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    XINFO.gc     = DefaultGC(XINFO.disp, XINFO.screen);
@@ -373,6 +381,7 @@ draw()
    x += power_draw(COLOR_WHITE, x, y) + spacing;
    x += volume_draw(COLOR_WHITE, x, y) + spacing;
    time_draw(COLOR_CYAN, x, y);
+   border_draw(COLOR_GREY, 0, 0);
 
    /* copy the buffer to the window and flush */
    XCopyArea(XINFO.disp, XINFO.buf, XINFO.win, XINFO.gc,
