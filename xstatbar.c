@@ -13,6 +13,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/types.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +69,10 @@ main (int argc, char *argv[])
    char  ch;
    int   x, y, w, h, b;
    int   sleep_seconds;
+   fd_set rd;
+   int xfd, rv;
+   struct timeval tv;
+   XEvent ev;
 
    /* set defaults */
    x = 0;
@@ -148,25 +154,42 @@ main (int argc, char *argv[])
 
    /* setup X window */
    setup_x(x, y, w, h, b, font);
+   xfd = ConnectionNumber(XINFO.disp);
 
    /* shutdown function */
-   signal(SIGINT,  signal_handler);
+   signal(SIGINT, signal_handler);
+
+   volume_update();
+   power_update();
+   sysinfo_update();
 
    while (1) {
-
-      /* handle any signals */
-      process_signals();
-
-      /* update stats */
-      volume_update();
-      power_update();
-      sysinfo_update();
-
-      /* draw */
-      draw();
-
-      /* sleep */
-      sleep(sleep_seconds);
+      tv.tv_sec = sleep_seconds;
+      tv.tv_usec = 0;
+      FD_ZERO(&rd);
+      FD_SET(xfd, &rd);
+ 
+      rv = select(xfd + 1, &rd, NULL, NULL, &tv);
+      if (rv == -1) {
+         process_signals();
+         perror("select()");
+         return 1;
+      } else if (rv > 0) { /* X event */
+         while (XPending(XINFO.disp)) {
+            XNextEvent(XINFO.disp, &ev);
+            if (ev.type == Expose)
+               draw();
+         }
+      } else if (rv == 0) { /* timeout */
+         /* handle any signals */
+         process_signals();
+         /* update stats */
+         volume_update();
+         power_update();
+         sysinfo_update();
+         /* draw */
+         draw();
+      }
    }
 
    /* UNREACHABLE */
@@ -298,6 +321,7 @@ setup_x(int x, int y, int w, int h, int b, const char *font)
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    XINFO.gc     = DefaultGC(XINFO.disp, XINFO.screen);
+   x11_window_attributes.event_mask = ExposureMask;
    x11_window_attributes.override_redirect = 0;
    if(!(XINFO.xrdb = XrmGetDatabase(XINFO.disp))) {
       xrms = XResourceManagerString(XINFO.disp);
@@ -311,7 +335,7 @@ setup_x(int x, int y, int w, int h, int b, const char *font)
       XINFO.width, XINFO.height,
       1,
       CopyFromParent, InputOutput, XINFO.vis,
-      CWOverrideRedirect, &x11_window_attributes
+      CWOverrideRedirect|CWEventMask, &x11_window_attributes
    );
 
    /* setup window manager hints */
