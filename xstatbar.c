@@ -330,7 +330,7 @@ draw()
 
    /* determine starting x and y */
    y = XINFO.height - XINFO.font->descent;
-   x = 0;
+   x = 2;
 
    /* start drawing stats */
    for (cpu = 0; cpu < sysinfo.ncpu; cpu++)

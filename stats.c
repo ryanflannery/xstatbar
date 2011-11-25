@@ -696,7 +696,7 @@ time_draw(XColor color, int x, int y)
    strftime(timestr, sizeof(timestr), time_fmt, localtime(&now));
 
    /* XXX hack to right-align it - rethink a more general way for this */
-   width = XTextWidth(XINFO.font, timestr, strlen(timestr));
+   width = XTextWidth(XINFO.font, timestr, strlen(timestr)) + 2;
    return render_text(color, XINFO.width - width, y, timestr);
 }
 
