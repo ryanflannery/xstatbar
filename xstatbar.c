@@ -45,6 +45,18 @@ void usage(const char *pname);
 void setup_x(int x, int y, int w, int h, int b, const char *font);
 void draw();
 
+struct applet {
+   int (*draw) (XColor, int, int);
+   XColor *color;
+} applets[] = {
+   { cpu_draw,    &COLOR_WHITE },
+   { mem_draw,    &COLOR_WHITE },
+   { procs_draw,  &COLOR_WHITE },
+   { power_draw,  &COLOR_WHITE },
+   { volume_draw, &COLOR_WHITE },
+   { time_draw,   &COLOR_CYAN  },
+   { border_draw, &COLOR_GREY  },
+};
 
 int
 main (int argc, char *argv[])
@@ -359,7 +371,7 @@ void
 draw()
 {
    static int spacing = 10;
-   int x, y, h;
+   int x, y, h, i;
 
    /* paint over the existing pixmap */
    XSetForeground(XINFO.disp, XINFO.gc, COLOR_BLACK.pixel);
@@ -371,14 +383,9 @@ draw()
    y = (XINFO.height / 2) - (h / 2) + XINFO.font->ascent;
    x = 2;
 
-   /* start drawing stats */
-   x += cpu_draw(COLOR_WHITE, x, y) + spacing;
-   x += mem_draw(COLOR_WHITE, x, y) + spacing;
-   x += procs_draw(COLOR_WHITE, x, y) + spacing;
-   x += power_draw(COLOR_WHITE, x, y) + spacing;
-   x += volume_draw(COLOR_WHITE, x, y) + spacing;
-   time_draw(COLOR_CYAN, x, y);
-   border_draw(COLOR_GREY, 0, 0);
+   /* draw stats */
+   for (i = 0; i < sizeof(applets)/sizeof(applets[0]); i++)
+      x += applets[i].draw(*(applets[i].color), x, y) + spacing;
 
    /* copy the buffer to the window and flush */
    XCopyArea(XINFO.disp, XINFO.buf, XINFO.win, XINFO.gc,
