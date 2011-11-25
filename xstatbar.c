@@ -193,6 +193,7 @@ void
 cleanup()
 {
    /* x teardown */
+   XrmDestroyDatabase(XINFO.xrdb);
    XClearWindow(XINFO.disp,   XINFO.win);
    XFreePixmap(XINFO.disp,    XINFO.buf);
    XDestroyWindow(XINFO.disp, XINFO.win);
@@ -204,6 +205,25 @@ cleanup()
    sysinfo_close();
 
    exit(0);
+}
+
+/* get resource from X Resource database */
+const char *
+get_resource(const char *resource)
+{
+	static char name[256], class[256], *type;
+	XrmValue value;
+
+	if (!XINFO.xrdb)
+		return NULL;
+#define RESCLASS "xstatbar"
+#define RESNAME "XStatBar"
+	snprintf(name, sizeof(name), "%s.%s", RESNAME, resource);
+	snprintf(class, sizeof(class), "%s.%s", RESCLASS, resource);
+	XrmGetResource(XINFO.xrdb, name, class, &type, &value);
+	if (value.addr)
+		return value.addr;
+	return NULL;
 }
 
 /* setup all colors used */
@@ -218,17 +238,21 @@ setup_colors()
       &COLOR_WHITE, &COLOR_BLACK };
 
    const int num_colors = 8;
+   const char *color;
+   char resname[8];
    int i;
    Colormap cm;
 
    cm = DefaultColormap(XINFO.disp, 0);
 
    for (i = 0; i < num_colors; i++) {
-      if (XParseColor(XINFO.disp, cm, color_names[i], xcolors[i]) == 0)
-         errx(1, "failed to parse color \"%s\"", color_names[i]);
+      snprintf(resname, sizeof(resname), "color%d", i);
+      color = get_resource(resname);
+      if (XParseColor(XINFO.disp, cm, color ? color : color_names[i], xcolors[i]) == 0)
+         errx(1, "failed to parse color \"%s\"", color ? color : color_names[i]);
 
       if (XAllocColor(XINFO.disp, cm, xcolors[i]) == 0)
-         errx(1, "failed to allocate color \"%s\"", color_names[i]);
+         errx(1, "failed to allocate color \"%s\"", color ? color : color_names[i]);
    }
 }
 
@@ -239,11 +263,13 @@ setup_x(int x, int y, int w, int h, const char *font)
    XSetWindowAttributes x11_window_attributes;
    Atom type;
    unsigned long struts[12];
+   char *xrms = NULL;
 
    /* open display */
    if (!(XINFO.disp = XOpenDisplay(NULL)))
       errx(1, "can't open X11 display.");
-
+   /* initialize resource manager */
+   XrmInitialize();
    /* setup various defaults/settings */
    XINFO.screen = DefaultScreen(XINFO.disp);
    XINFO.width  = w ? w : DisplayWidth(XINFO.disp, XINFO.screen);
@@ -252,7 +278,11 @@ setup_x(int x, int y, int w, int h, const char *font)
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    XINFO.gc     = DefaultGC(XINFO.disp, XINFO.screen);
    x11_window_attributes.override_redirect = 0;
-
+   if(!(XINFO.xrdb = XrmGetDatabase(XINFO.disp))) {
+      xrms = XResourceManagerString(XINFO.disp);
+      if (xrms)
+         XINFO.xrdb = XrmGetStringDatabase(xrms);
+   }
    /* create window */
    XINFO.win = XCreateWindow(
       XINFO.disp, DefaultRootWindow(XINFO.disp),

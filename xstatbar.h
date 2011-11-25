@@ -21,6 +21,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/Xresource.h>
 #include <X11/extensions/shape.h>
 
 /* structure to wrap all necessary x stuff */
@@ -31,6 +32,7 @@ typedef struct xinfo {
    Visual        *vis;
    GC             gc;
    XFontStruct   *font;
+   XrmDatabase    xrdb;
 
    int            screen;
    int            depth;
