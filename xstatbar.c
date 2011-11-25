@@ -196,6 +196,7 @@ cleanup()
 {
    /* x teardown */
    XdbeDeallocateBackBufferName(XINFO.disp, XINFO.backbuf);
+   XrmDestroyDatabase(XINFO.xrdb);
    XClearWindow(XINFO.disp,   XINFO.win);
    XDestroyWindow(XINFO.disp, XINFO.win);
    XftDrawDestroy( XINFO.xftdraw );
@@ -209,6 +210,26 @@ cleanup()
    exit(0);
 }
 
+/* get resource from X Resource database */
+const char *
+get_resource(const char *resource)
+{
+	static char name[256], class[256], *type;
+	XrmValue value;
+
+	if (!XINFO.xrdb)
+		return NULL;
+#define RESCLASS "xstatbar"
+#define RESNAME "XStatBar"
+	snprintf(name, sizeof(name), "%s.%s", RESNAME, resource);
+	snprintf(class, sizeof(class), "%s.%s", RESCLASS, resource);
+	XrmGetResource(XINFO.xrdb, name, class, &type, &value);
+	if (value.addr)
+		return value.addr;
+	return NULL;
+}
+
+/* setup all colors used */
 void
 setup_colors()
 {
@@ -263,11 +284,13 @@ setup_x(int x, int y, int w, int h, const char *font)
    XSetWindowAttributes x11_window_attributes;
    Atom type;
    unsigned long struts[12];
+   char *xrms = NULL;
 
    /* open display */
    if (!(XINFO.disp = XOpenDisplay(NULL)))
       errx(1, "can't open X11 display.");
-
+   /* initialize resource manager */
+   XrmInitialize();
    /* setup various defaults/settings */
    XINFO.screen = DefaultScreen(XINFO.disp);
    XINFO.height = h;
@@ -275,6 +298,12 @@ setup_x(int x, int y, int w, int h, const char *font)
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    XINFO.width  = w ? w : calculate_width_of_default_screen();
 	 x11_window_attributes.override_redirect = 1;
+
+   if(!(XINFO.xrdb = XrmGetDatabase(XINFO.disp))) {
+      xrms = XResourceManagerString(XINFO.disp);
+      if (xrms)
+         XINFO.xrdb = XrmGetStringDatabase(xrms);
+   }
 
    /* create window */
    XINFO.win = XCreateWindow(

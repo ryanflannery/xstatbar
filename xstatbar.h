@@ -22,6 +22,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 #include <X11/Xatom.h>
+#include <X11/Xresource.h>
 #include <X11/extensions/shape.h>
 #include <X11/extensions/Xdbe.h>
 #include <X11/extensions/Xrandr.h>
@@ -34,6 +35,7 @@ typedef struct xinfo {
    XftFont       *font;
    XftDraw			 *xftdraw;
    XdbeBackBuffer backbuf;
+   XrmDatabase    xrdb;
 
    int            screen;
    int            depth;
