@@ -324,7 +324,7 @@ draw()
    int cpu;
 
    /* paint over the existing pixmap */
-   XSetForeground(XINFO.disp, XINFO.gc, BlackPixel(XINFO.disp, XINFO.screen));
+   XSetForeground(XINFO.disp, XINFO.gc, COLOR_BLACK.pixel);
    XFillRectangle(XINFO.disp, XINFO.buf, XINFO.gc,
       0, 0, XINFO.width, XINFO.height);
 
