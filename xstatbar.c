@@ -48,6 +48,7 @@ void draw();
 struct applet {
    int (*draw) (XColor, int, int);
    XColor *color;
+   int width;
 } applets[] = {
    { cpu_draw,    &COLOR_WHITE },
    { mem_draw,    &COLOR_WHITE },
@@ -371,7 +372,7 @@ void
 draw()
 {
    static int spacing = 10;
-   int x, y, h, i;
+   int x, y, h, i, w;
 
    /* paint over the existing pixmap */
    XSetForeground(XINFO.disp, XINFO.gc, COLOR_BLACK.pixel);
@@ -384,8 +385,12 @@ draw()
    x = 2;
 
    /* draw stats */
-   for (i = 0; i < sizeof(applets)/sizeof(applets[0]); i++)
-      x += applets[i].draw(*(applets[i].color), x, y) + spacing;
+   for (i = 0; i < sizeof(applets)/sizeof(applets[0]); i++) {
+      w = applets[i].draw(*(applets[i].color), x, y);
+      if (w > applets[i].width)
+	  applets[i].width = w + spacing;
+      x += applets[i].width;
+   }
 
    /* copy the buffer to the window and flush */
    XCopyArea(XINFO.disp, XINFO.buf, XINFO.win, XINFO.gc,

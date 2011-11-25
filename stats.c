@@ -591,11 +591,16 @@ int
 cpu_draw(XColor color, int x, int y)
 {
    int cpu, startx;
-   int spacing = 10;
+   int nw, spacing = 10;
+   static int width = 0;
 
    startx = x;
-   for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
-      x += cpu_draw_one(cpu, COLOR_WHITE, x, y) + spacing;
+   for (cpu = 0; cpu < sysinfo.ncpu; cpu++) {
+      nw = cpu_draw_one(cpu, COLOR_WHITE, x, y) + spacing;
+      width = nw > width ? nw : width;
+      x += width;
+   }
+   x -= spacing; /* trailing spacing */
    return x - startx;
 }
 
