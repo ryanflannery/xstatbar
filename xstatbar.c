@@ -320,7 +320,7 @@ void
 draw()
 {
    static int spacing = 10;
-   int x, y;
+   int x, y, h;
    int cpu;
 
    /* paint over the existing pixmap */
@@ -329,7 +329,8 @@ draw()
       0, 0, XINFO.width, XINFO.height);
 
    /* determine starting x and y */
-   y = XINFO.height - XINFO.font->descent;
+   h = XINFO.font->ascent + XINFO.font->descent;
+   y = (XINFO.height / 2) - (h / 2) + XINFO.font->ascent;
    x = 2;
 
    /* start drawing stats */
