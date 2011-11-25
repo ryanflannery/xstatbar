@@ -512,7 +512,7 @@ sysinfo_close()
 }
 
 int
-cpu_draw(int cpu, XColor color, int x, int y)
+cpu_draw_one(int cpu, XColor color, int x, int y)
 {
    static char  str[1000];
    static char *cpuStateNames[] = { "u", "n", "s", "i", "I" };
@@ -584,6 +584,18 @@ cpu_draw(int cpu, XColor color, int x, int y)
       x += render_text(*(cpuStateColors[state]), x, y, str);
    }
 
+   return x - startx;
+}
+
+int
+cpu_draw(XColor color, int x, int y)
+{
+   int cpu, startx;
+   int spacing = 10;
+
+   startx = x;
+   for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
+      x += cpu_draw_one(cpu, COLOR_WHITE, x, y) + spacing;
    return x - startx;
 }
 

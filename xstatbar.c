@@ -360,7 +360,6 @@ draw()
 {
    static int spacing = 10;
    int x, y, h;
-   int cpu;
 
    /* paint over the existing pixmap */
    XSetForeground(XINFO.disp, XINFO.gc, COLOR_BLACK.pixel);
@@ -373,9 +372,7 @@ draw()
    x = 2;
 
    /* start drawing stats */
-   for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
-      x += cpu_draw(cpu, COLOR_WHITE, x, y) + spacing;
-
+   x += cpu_draw(COLOR_WHITE, x, y) + spacing;
    x += mem_draw(COLOR_WHITE, x, y) + spacing;
    x += procs_draw(COLOR_WHITE, x, y) + spacing;
    x += power_draw(COLOR_WHITE, x, y) + spacing;
