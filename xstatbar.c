@@ -30,7 +30,7 @@
 xinfo_t  XINFO;
 XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
        COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-       COLOR_WHITE,  COLOR_BLACK;
+       COLOR_WHITE,  COLOR_BLACK, COLOR_GREY;
 
 
 /* signal flags */
@@ -231,13 +231,13 @@ void
 setup_colors()
 {
    static char *color_names[] = { "red", "green", "blue", "yellow",
-      "magenta", "cyan", "white", "black" };
+      "magenta", "cyan", "white", "black", "grey" };
 
    static XColor *xcolors[] = { &COLOR_RED, &COLOR_GREEN, &COLOR_BLUE,
       &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_CYAN,
-      &COLOR_WHITE, &COLOR_BLACK };
+      &COLOR_WHITE, &COLOR_BLACK, &COLOR_GREY };
 
-   const int num_colors = 8;
+   const int num_colors = 9;
    const char *color;
    char resname[8];
    int i;
