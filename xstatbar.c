@@ -296,6 +296,7 @@ setup_x(int x, int y, int w, int h, const char *font)
 
    XSetFont(XINFO.disp, XINFO.gc, XINFO.font->fid);
 
+   XStoreName(XINFO.disp, XINFO.win, "xstatbar");
    /* connect window to display */
    XMapWindow(XINFO.disp, XINFO.win);
 
