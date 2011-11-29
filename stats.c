@@ -443,7 +443,7 @@ sysinfo_update()
 
    /* get swap status */
    sysinfo.swap_used = sysinfo.swap_total = 0;
-   if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) == 0) {
+   if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) != 0) {
       if ((swapdev = calloc(nswaps, sizeof(*swapdev))) == NULL)
         err(1, "sysinfo update: swapdev calloc failed (%d)", nswaps);
       if (swapctl(SWAP_STATS, swapdev, nswaps) == -1)
