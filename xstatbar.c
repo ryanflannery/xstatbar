@@ -273,12 +273,12 @@ get_resource(const char *resource)
 void
 setup_colors()
 {
-   static char *color_names[] = { "red", "green", "blue", "yellow",
-      "magenta", "cyan", "white", "black", "grey" };
+   static char *color_names[] = { "black", "red", "green", "blue", "yellow",
+      "magenta", "cyan", "white", "grey" };
 
-   static XColor *xcolors[] = { &COLOR_RED, &COLOR_GREEN, &COLOR_BLUE,
-      &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_CYAN,
-      &COLOR_WHITE, &COLOR_BLACK, &COLOR_GREY };
+   static XColor *xcolors[] = { &COLOR_BLACK, &COLOR_RED, &COLOR_GREEN,
+      &COLOR_BLUE, &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_CYAN,
+      &COLOR_WHITE, &COLOR_GREY };
 
    const int num_colors = 9;
    const char *color;
