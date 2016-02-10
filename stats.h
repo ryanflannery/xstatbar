@@ -29,6 +29,7 @@
 
 #include <machine/apmvar.h>
 #include <sys/audioio.h>
+#include <sys/vmmeter.h>
 #include <sys/ioctl.h>
 #include <sys/param.h>
 #include <sys/sched.h>

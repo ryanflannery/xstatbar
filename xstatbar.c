@@ -297,6 +297,7 @@ draw_divider(XColor color, int x, int width)
 void
 draw()
 {
+   XEvent dummy;
    static int spacing = 10;
    int x, y;
    int cpu;
@@ -323,6 +324,7 @@ draw()
    /* copy the buffer to the window and flush */
    XCopyArea(XINFO.disp, XINFO.buf, XINFO.win, XINFO.gc,
       0, 0, XINFO.width, XINFO.height, 0, 0);
+   XNextEvent(XINFO.disp, &dummy);
    XFlush(XINFO.disp);
 }
 
