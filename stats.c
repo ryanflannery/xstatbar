@@ -443,7 +443,7 @@ sysinfo_update()
 
    /* get swap status */
    sysinfo.swap_used = sysinfo.swap_total = 0;
-   if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) == 0) {
+   if ((nswaps = swapctl(SWAP_NSWAP, 0, 0)) != 0) {
       if ((swapdev = calloc(nswaps, sizeof(*swapdev))) == NULL)
         err(1, "sysinfo update: swapdev calloc failed (%d)", nswaps);
       if (swapctl(SWAP_STATS, swapdev, nswaps) == -1)
@@ -512,7 +512,7 @@ sysinfo_close()
 }
 
 int
-cpu_draw(int cpu, XColor color, int x, int y)
+cpu_draw_one(int cpu, XColor color, int x, int y)
 {
    static char  str[1000];
    static char *cpuStateNames[] = { "u", "n", "s", "i", "I" };
@@ -584,6 +584,23 @@ cpu_draw(int cpu, XColor color, int x, int y)
       x += render_text(*(cpuStateColors[state]), x, y, str);
    }
 
+   return x - startx;
+}
+
+int
+cpu_draw(XColor color, int x, int y)
+{
+   int cpu, startx;
+   int nw, spacing = 10;
+   static int width = 0;
+
+   startx = x;
+   for (cpu = 0; cpu < sysinfo.ncpu; cpu++) {
+      nw = cpu_draw_one(cpu, COLOR_WHITE, x, y) + spacing;
+      width = nw > width ? nw : width;
+      x += width;
+   }
+   x -= spacing; /* trailing spacing */
    return x - startx;
 }
 
@@ -696,7 +713,18 @@ time_draw(XColor color, int x, int y)
    strftime(timestr, sizeof(timestr), time_fmt, localtime(&now));
 
    /* XXX hack to right-align it - rethink a more general way for this */
-   width = XTextWidth(XINFO.font, timestr, strlen(timestr));
+   width = XTextWidth(XINFO.font, timestr, strlen(timestr)) + 2;
    return render_text(color, XINFO.width - width, y, timestr);
 }
 
+int
+border_draw(XColor color, int x, int y)
+{
+   int bw = XINFO.border;
+   if (!bw)
+	return 0;
+   XSetForeground(XINFO.disp, XINFO.gc, color.pixel);
+   XSetLineAttributes(XINFO.disp, XINFO.gc, bw, LineSolid, CapNotLast, JoinMiter);
+   XDrawRectangle(XINFO.disp, XINFO.buf, XINFO.gc, bw/2, bw/2, XINFO.width-bw, XINFO.height-bw);
+   return 0;
+}

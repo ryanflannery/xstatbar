@@ -13,6 +13,8 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
+#include <sys/types.h>
+#include <sys/time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,7 +32,7 @@
 xinfo_t  XINFO;
 XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
        COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-       COLOR_WHITE,  COLOR_BLACK;
+       COLOR_WHITE,  COLOR_BLACK, COLOR_GREY;
 
 
 /* signal flags */
@@ -42,9 +44,22 @@ void signal_handler(int sig);
 void process_signals();
 void cleanup();
 void usage(const char *pname);
-void setup_x(int x, int y, int w, int h, const char *font);
+void setup_x(int x, int y, int w, int h, int b, const char *font);
 void draw();
 
+struct applet {
+   int (*draw) (XColor, int, int);
+   XColor *color;
+   int width;
+} applets[] = {
+   { cpu_draw,    &COLOR_WHITE },
+   { mem_draw,    &COLOR_WHITE },
+   { procs_draw,  &COLOR_WHITE },
+   { power_draw,  &COLOR_WHITE },
+   { volume_draw, &COLOR_WHITE },
+   { time_draw,   &COLOR_CYAN  },
+   { border_draw, &COLOR_GREY  },
+};
 
 int
 main (int argc, char *argv[])
@@ -52,21 +67,32 @@ main (int argc, char *argv[])
    const char *errstr;
    char *font;
    char  ch;
-   int   x, y, w, h;
+   int   x, y, w, h, b;
    int   sleep_seconds;
+   fd_set rd;
+   int xfd, rv;
+   struct timeval tv;
+   XEvent ev;
 
    /* set defaults */
    x = 0;
    y = 0;
-   w = 1280;
+   w = 0;
    h = 13;
+   b = 0;
    font = "*-fixed-*-9-*";
    time_fmt = "%a %d %b %Y %I:%M:%S %p";
    sleep_seconds = 1;
 
    /* parse command line */
-   while ((ch = getopt(argc, argv, "x:y:w:h:s:f:t:T")) != -1) {
+   while ((ch = getopt(argc, argv, "b:x:y:w:h:s:f:t:T")) != -1) {
       switch (ch) {
+	 case 'b':
+            b = strtonum(optarg, 0, INT_MAX, &errstr);
+            if (errstr)
+               errx(1, "illegal b value \"%s\": %s", optarg, errstr);
+            break;
+
          case 'x':
             x = strtonum(optarg, 0, INT_MAX, &errstr);
             if (errstr)
@@ -127,26 +153,43 @@ main (int argc, char *argv[])
    sysinfo_init(45);
 
    /* setup X window */
-   setup_x(x, y, w, h, font);
+   setup_x(x, y, w, h, b, font);
+   xfd = ConnectionNumber(XINFO.disp);
 
    /* shutdown function */
-   signal(SIGINT,  signal_handler);
+   signal(SIGINT, signal_handler);
+
+   volume_update();
+   power_update();
+   sysinfo_update();
 
    while (1) {
-
-      /* handle any signals */
-      process_signals();
-
-      /* update stats */
-      volume_update();
-      power_update();
-      sysinfo_update();
-
-      /* draw */
-      draw();
-
-      /* sleep */
-      sleep(sleep_seconds);
+      tv.tv_sec = sleep_seconds;
+      tv.tv_usec = 0;
+      FD_ZERO(&rd);
+      FD_SET(xfd, &rd);
+ 
+      rv = select(xfd + 1, &rd, NULL, NULL, &tv);
+      if (rv == -1) {
+         process_signals();
+         perror("select()");
+         return 1;
+      } else if (rv > 0) { /* X event */
+         while (XPending(XINFO.disp)) {
+            XNextEvent(XINFO.disp, &ev);
+            if (ev.type == Expose)
+               draw();
+         }
+      } else if (rv == 0) { /* timeout */
+         /* handle any signals */
+         process_signals();
+         /* update stats */
+         volume_update();
+         power_update();
+         sysinfo_update();
+         /* draw */
+         draw();
+      }
    }
 
    /* UNREACHABLE */
@@ -193,6 +236,7 @@ void
 cleanup()
 {
    /* x teardown */
+   XrmDestroyDatabase(XINFO.xrdb);
    XClearWindow(XINFO.disp,   XINFO.win);
    XFreePixmap(XINFO.disp,    XINFO.buf);
    XDestroyWindow(XINFO.disp, XINFO.win);
@@ -206,51 +250,84 @@ cleanup()
    exit(0);
 }
 
+/* get resource from X Resource database */
+const char *
+get_resource(const char *resource)
+{
+	static char name[256], class[256], *type;
+	XrmValue value;
+
+	if (!XINFO.xrdb)
+		return NULL;
+#define RESCLASS "xstatbar"
+#define RESNAME "XStatBar"
+	snprintf(name, sizeof(name), "%s.%s", RESNAME, resource);
+	snprintf(class, sizeof(class), "%s.%s", RESCLASS, resource);
+	XrmGetResource(XINFO.xrdb, name, class, &type, &value);
+	if (value.addr)
+		return value.addr;
+	return NULL;
+}
+
 /* setup all colors used */
 void
 setup_colors()
 {
-   static char *color_names[] = { "red", "green", "blue", "yellow",
-      "magenta", "cyan", "white", "black" };
+   static char *color_names[] = { "black", "red", "green", "blue", "yellow",
+      "magenta", "cyan", "white", "grey" };
 
-   static XColor *xcolors[] = { &COLOR_RED, &COLOR_GREEN, &COLOR_BLUE,
-      &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_CYAN,
-      &COLOR_WHITE, &COLOR_BLACK };
+   static XColor *xcolors[] = { &COLOR_BLACK, &COLOR_RED, &COLOR_GREEN,
+      &COLOR_BLUE, &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_CYAN,
+      &COLOR_WHITE, &COLOR_GREY };
 
-   const int num_colors = 8;
+   const int num_colors = 9;
+   const char *color;
+   char resname[8];
    int i;
    Colormap cm;
 
    cm = DefaultColormap(XINFO.disp, 0);
 
    for (i = 0; i < num_colors; i++) {
-      if (XParseColor(XINFO.disp, cm, color_names[i], xcolors[i]) == 0)
-         errx(1, "failed to parse color \"%s\"", color_names[i]);
+      snprintf(resname, sizeof(resname), "color%d", i);
+      color = get_resource(resname);
+      if (XParseColor(XINFO.disp, cm, color ? color : color_names[i], xcolors[i]) == 0)
+         errx(1, "failed to parse color \"%s\"", color ? color : color_names[i]);
 
       if (XAllocColor(XINFO.disp, cm, xcolors[i]) == 0)
-         errx(1, "failed to allocate color \"%s\"", color_names[i]);
+         errx(1, "failed to allocate color \"%s\"", color ? color : color_names[i]);
    }
 }
 
 /* setup x window */
 void
-setup_x(int x, int y, int w, int h, const char *font)
+setup_x(int x, int y, int w, int h, int b, const char *font)
 {
    XSetWindowAttributes x11_window_attributes;
+   Atom type;
+   unsigned long struts[12];
+   char *xrms = NULL;
 
    /* open display */
    if (!(XINFO.disp = XOpenDisplay(NULL)))
       errx(1, "can't open X11 display.");
-
+   /* initialize resource manager */
+   XrmInitialize();
    /* setup various defaults/settings */
    XINFO.screen = DefaultScreen(XINFO.disp);
-   XINFO.width  = w;
+   XINFO.width  = w ? w : DisplayWidth(XINFO.disp, XINFO.screen);
    XINFO.height = h;
+   XINFO.border = b;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    XINFO.gc     = DefaultGC(XINFO.disp, XINFO.screen);
-   x11_window_attributes.override_redirect = 1;
-
+   x11_window_attributes.event_mask = ExposureMask;
+   x11_window_attributes.override_redirect = 0;
+   if(!(XINFO.xrdb = XrmGetDatabase(XINFO.disp))) {
+      xrms = XResourceManagerString(XINFO.disp);
+      if (xrms)
+         XINFO.xrdb = XrmGetStringDatabase(xrms);
+   }
    /* create window */
    XINFO.win = XCreateWindow(
       XINFO.disp, DefaultRootWindow(XINFO.disp),
@@ -258,8 +335,27 @@ setup_x(int x, int y, int w, int h, const char *font)
       XINFO.width, XINFO.height,
       1,
       CopyFromParent, InputOutput, XINFO.vis,
-      CWOverrideRedirect, &x11_window_attributes
+      CWOverrideRedirect|CWEventMask, &x11_window_attributes
    );
+
+   /* setup window manager hints */
+   type = XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
+   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE", False),
+		   XA_ATOM, 32, PropModeReplace, (unsigned char*)&type, 1);
+   bzero(struts, sizeof(struts));
+   enum { left, right, top, bottom, left_start_y, left_end_y, right_start_y,
+	  right_end_y, top_start_x, top_end_x, bottom_start_x, bottom_end_x };
+   if (y <= DisplayHeight(XINFO.disp, XINFO.screen)/2) {
+	   struts[top] = y + XINFO.height;
+	   struts[top_start_x] = x;
+	   struts[top_end_x] = x + XINFO.width;
+   } else {
+	   struts[bottom] = DisplayHeight(XINFO.disp, XINFO.screen) - y;
+	   struts[bottom_start_x] = x;
+	   struts[bottom_end_x] = x + XINFO.width;
+   }
+   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_STRUT_PARTIAL", False),
+		   XA_CARDINAL, 32, PropModeReplace, (unsigned char*)struts, 12);
 
    /* create pixmap used for double buffering */
    XINFO.buf = XCreatePixmap(
@@ -275,9 +371,11 @@ setup_x(int x, int y, int w, int h, const char *font)
 
    XSetFont(XINFO.disp, XINFO.gc, XINFO.font->fid);
 
+   XStoreName(XINFO.disp, XINFO.win, "xstatbar");
    /* connect window to display */
    XMapWindow(XINFO.disp, XINFO.win);
 
+   XMoveWindow(XINFO.disp, XINFO.win, x, y);
    /* setup colors */
    setup_colors();
 }
@@ -299,27 +397,25 @@ draw()
 {
    XEvent dummy;
    static int spacing = 10;
-   int x, y;
-   int cpu;
+   int x, y, h, i, w;
 
    /* paint over the existing pixmap */
-   XSetForeground(XINFO.disp, XINFO.gc, BlackPixel(XINFO.disp, XINFO.screen));
+   XSetForeground(XINFO.disp, XINFO.gc, COLOR_BLACK.pixel);
    XFillRectangle(XINFO.disp, XINFO.buf, XINFO.gc,
       0, 0, XINFO.width, XINFO.height);
 
    /* determine starting x and y */
-   y = XINFO.height - XINFO.font->descent;
-   x = 0;
+   h = XINFO.font->ascent + XINFO.font->descent;
+   y = (XINFO.height / 2) - (h / 2) + XINFO.font->ascent;
+   x = 2;
 
-   /* start drawing stats */
-   for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
-      x += cpu_draw(cpu, COLOR_WHITE, x, y) + spacing;
-
-   x += mem_draw(COLOR_WHITE, x, y) + spacing;
-   x += procs_draw(COLOR_WHITE, x, y) + spacing;
-   x += power_draw(COLOR_WHITE, x, y) + spacing;
-   x += volume_draw(COLOR_WHITE, x, y) + spacing;
-   time_draw(COLOR_CYAN, x, y);
+   /* draw stats */
+   for (i = 0; i < sizeof(applets)/sizeof(applets[0]); i++) {
+      w = applets[i].draw(*(applets[i].color), x, y);
+      if (w > applets[i].width)
+	  applets[i].width = w + spacing;
+      x += applets[i].width;
+   }
 
    /* copy the buffer to the window and flush */
    XCopyArea(XINFO.disp, XINFO.buf, XINFO.win, XINFO.gc,
