@@ -1,8 +1,9 @@
 /*
  * Copyright (c) 2009 Ryan Flannery <ryan.flannery@gmail.com>
  *  audio/volume by   Jacob Meuser <jakemsr@sdf.lonestar.org>
- *  patch by         Antoine Jacoutot <ajacoutot@openbsd.org>
- *  misc updates by  Dmitrij D. Czarkoff <czarkoff@gmail.cim>
+ *  patch by          Antoine Jacoutot <ajacoutot@openbsd.org>
+ *  misc updates by   Dmitrij D. Czarkoff <czarkoff@gmail.cim>
+ *  cpu consolidation Martin Brandenburg <martin@martinbrandenburg.com>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -519,11 +520,14 @@ cpu_draw(int cpu, XColor color, int x, int y)
    static XColor *cpuStateColors[] = {
       &COLOR_RED, &COLOR_BLUE, &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_GREEN
    };
-   int state, startx, time, col, h, i;
+   int state, startx, time, col, h, i, j;
 
    startx = x;
 
-   snprintf(str, sizeof(str), "cpu%d:", cpu);
+   if (cpu == -1)
+      snprintf(str, sizeof(str), "cpu:");
+   else
+      snprintf(str, sizeof(str), "cpu%d:", cpu);
    x += render_text(color, x, y, str) + 1;
 
    /* for the graph, draw a green rectangle to start with */
@@ -537,7 +541,13 @@ cpu_draw(int cpu, XColor color, int x, int y)
 
       /* user time */
       h = 0;
-      for (i = 0; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
+      if (cpu == -1) {
+         for (i = 0; i < 4; i++)
+            for (j = 0; j < sysinfo.ncpu; j++)
+               h += sysinfo.cpu_pcnts[j][time][i];
+         h /= sysinfo.ncpu;
+      } else
+         for (i = 0; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
       h = h * XINFO.height / 100;
       XSetForeground(XINFO.disp, XINFO.gc, COLOR_RED.pixel);
       XDrawLine(XINFO.disp, XINFO.buf, XINFO.gc,
@@ -546,7 +556,13 @@ cpu_draw(int cpu, XColor color, int x, int y)
 
       /* nice time */
       h = 0;
-      for (i = 1; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
+      if (cpu == -1) {
+         for (i = 1; i < 4; i++)
+            for (j = 0; j < sysinfo.ncpu; j++)
+               h += sysinfo.cpu_pcnts[j][time][i];
+         h /= sysinfo.ncpu;
+      } else
+         for (i = 1; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
       h = h * XINFO.height / 100;
       XSetForeground(XINFO.disp, XINFO.gc, COLOR_BLUE.pixel);
       XDrawLine(XINFO.disp, XINFO.buf, XINFO.gc,
@@ -555,7 +571,13 @@ cpu_draw(int cpu, XColor color, int x, int y)
 
       /* system time */
       h = 0;
-      for (i = 2; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
+      if (cpu == -1) {
+         for (i = 2; i < 4; i++)
+            for (j = 0; j < sysinfo.ncpu; j++)
+               h += sysinfo.cpu_pcnts[j][time][i];
+         h /= sysinfo.ncpu;
+      } else
+         for (i = 2; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
       h = h * XINFO.height / 100;
       XSetForeground(XINFO.disp, XINFO.gc, COLOR_YELLOW.pixel);
       XDrawLine(XINFO.disp, XINFO.buf, XINFO.gc,
@@ -563,7 +585,12 @@ cpu_draw(int cpu, XColor color, int x, int y)
          x + col, XINFO.height);
 
       /* interrupt time */
-      h = sysinfo.cpu_pcnts[cpu][time][3];
+      if (cpu == -1) {
+         for (j = 0; j < sysinfo.ncpu; j++)
+            h = sysinfo.cpu_pcnts[j][time][3];
+         h /= sysinfo.ncpu;
+      } else
+         h = sysinfo.cpu_pcnts[cpu][time][3];
       h = h * XINFO.height / 100;
       XSetForeground(XINFO.disp, XINFO.gc, COLOR_MAGENTA.pixel);
       XDrawLine(XINFO.disp, XINFO.buf, XINFO.gc,
@@ -578,8 +605,15 @@ cpu_draw(int cpu, XColor color, int x, int y)
    /* draw the text */
    time = sysinfo.current;
    for (state = 0; state < CPUSTATES; state++) {
-      snprintf(str, sizeof(str), "%3d%%%s",
-         sysinfo.cpu_pcnts[cpu][time][state], cpuStateNames[state]);
+      if (cpu == -1) {
+         h = 0;
+         for (i = 0; i < sysinfo.ncpu; i++)
+            h += sysinfo.cpu_pcnts[i][time][state];
+         h /= sysinfo.ncpu;
+         snprintf(str, sizeof(str), "%3d%%%s", h, cpuStateNames[state]);
+      } else
+         snprintf(str, sizeof(str), "%3d%%%s",
+            sysinfo.cpu_pcnts[cpu][time][state], cpuStateNames[state]);
 
       x += render_text(*(cpuStateColors[state]), x, y, str);
    }
