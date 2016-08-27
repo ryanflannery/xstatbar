@@ -15,6 +15,7 @@
 .Op Fl t Ar time-format
 .Op Fl T
 .Op Fl s Ar seconds
+.Op Fl c
 .Ek
 .Sh DESCRIPTION
 .Nm
@@ -104,6 +105,9 @@ The default format is
 .Dq "%a %d %b %Y %I:%M:%S %p"
 .It Fl T
 Use the default format for displaying the time but with a 24-hour format.
+.It Fl c
+Consolidate multiple CPUs into a single meter.  This usually helps fit the bar
+on smaller screens.
 .Sh EXAMPLES
 To display
 .Nm

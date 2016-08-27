@@ -43,7 +43,7 @@ void process_signals();
 void cleanup();
 void usage(const char *pname);
 void setup_x(int x, int y, int w, int h, const char *font);
-void draw();
+void draw(int);
 
 
 int
@@ -54,6 +54,7 @@ main (int argc, char *argv[])
    char  ch;
    int   x, y, w, h;
    int   sleep_seconds;
+   int   consolidate_cpus = 0;
 
    /* set defaults */
    x = 0;
@@ -65,7 +66,7 @@ main (int argc, char *argv[])
    sleep_seconds = 1;
 
    /* parse command line */
-   while ((ch = getopt(argc, argv, "x:y:w:h:s:f:t:T")) != -1) {
+   while ((ch = getopt(argc, argv, "x:y:w:h:s:f:t:Tc")) != -1) {
       switch (ch) {
          case 'x':
             x = strtonum(optarg, 0, INT_MAX, &errstr);
@@ -113,6 +114,10 @@ main (int argc, char *argv[])
             time_fmt = "%a %d %b %Y %H:%M:%S";
             break;
 
+         case 'c':
+            consolidate_cpus = 1;
+            break;
+
          case '?':
          default:
             usage(argv[0]);
@@ -143,7 +148,7 @@ main (int argc, char *argv[])
       sysinfo_update();
 
       /* draw */
-      draw();
+      draw(consolidate_cpus);
 
       /* sleep */
       sleep(sleep_seconds);
@@ -295,7 +300,7 @@ draw_divider(XColor color, int x, int width)
 
 /* draw all stats */
 void
-draw()
+draw(int consolidate_cpus)
 {
    XEvent dummy;
    static int spacing = 10;
@@ -312,8 +317,11 @@ draw()
    x = 0;
 
    /* start drawing stats */
-   for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
-      x += cpu_draw(cpu, COLOR_WHITE, x, y) + spacing;
+   if (consolidate_cpus)
+      x += cpu_draw(-1, COLOR_WHITE, x, y) + spacing;
+   else
+      for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
+         x += cpu_draw(cpu, COLOR_WHITE, x, y) + spacing;
 
    x += mem_draw(COLOR_WHITE, x, y) + spacing;
    x += procs_draw(COLOR_WHITE, x, y) + spacing;
