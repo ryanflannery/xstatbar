@@ -130,11 +130,11 @@ void sysinfo_close();
  * the width, in pixels, of what they drew.
  */
 
-int  volume_draw(XColor c, int x, int y);
-int  power_draw(XColor c, int x, int y);
-int  cpu_draw(int cpu, XColor c, int x, int y);
-int  mem_draw(XColor c, int x, int y);
-int  procs_draw(XColor c, int x, int y);
-int  time_draw(XColor c, int x, int y);
+int  volume_draw(XftColor *c, int x, int y);
+int  power_draw(XftColor *c, int x, int y);
+int  cpu_draw(int cpu, XftColor *c, int x, int y);
+int  mem_draw(XftColor *c, int x, int y);
+int  procs_draw(XftColor *c, int x, int y);
+int  time_draw(XftColor *c, int x, int y);
 
 #endif

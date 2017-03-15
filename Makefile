@@ -4,8 +4,8 @@ MANDIR=/usr/local/man/man1
 
 # build flags
 CC?=/usr/bin/cc
-CFLAGS+=-c -std=c89 -Wall -O2 -I/usr/X11R6/include
-LDFLAGS+=-L/usr/X11R6/lib -lX11 -lXext -lXrender -lXau -lXdmcp -lm
+CFLAGS+=-c -std=c99 -Wall -O2 -I/usr/X11R6/include -I/usr/X11R6/include/freetype2
+LDFLAGS+=-L/usr/X11R6/lib -lX11 -lXext -lXrender -lXau -lXdmcp -lm -lXft
 
 OBJS=xstatbar.o stats.o
 

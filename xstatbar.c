@@ -28,14 +28,13 @@
 
 /* extern's from xstatbar.h */
 xinfo_t  XINFO;
-XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
-       COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-       COLOR_WHITE,  COLOR_BLACK;
 
+XftColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
+         COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
+         COLOR_WHITE,  COLOR_BLACK;
 
 /* signal flags */
 volatile sig_atomic_t VSIG_QUIT = 0;
-
 
 /* local functions */
 void signal_handler(int sig);
@@ -44,7 +43,6 @@ void cleanup();
 void usage(const char *pname);
 void setup_x(int x, int y, int w, int h, const char *font);
 void draw(int);
-
 
 int
 main (int argc, char *argv[])
@@ -61,7 +59,7 @@ main (int argc, char *argv[])
    y = 0;
    w = 1280;
    h = 13;
-   font = "*-fixed-*-9-*";
+   font = "Fixed-6";
    time_fmt = "%a %d %b %Y %I:%M:%S %p";
    sleep_seconds = 1;
 
@@ -138,7 +136,6 @@ main (int argc, char *argv[])
    signal(SIGINT,  signal_handler);
 
    while (1) {
-
       /* handle any signals */
       process_signals();
 
@@ -199,9 +196,9 @@ cleanup()
 {
    /* x teardown */
    XClearWindow(XINFO.disp,   XINFO.win);
-   XFreePixmap(XINFO.disp,    XINFO.buf);
    XDestroyWindow(XINFO.disp, XINFO.win);
-   XCloseDisplay(XINFO.disp);
+   XftDrawDestroy( XINFO.xftdraw );
+	 XCloseDisplay(XINFO.disp);
 
    /* stats teardown */
    volume_close();
@@ -211,30 +208,26 @@ cleanup()
    exit(0);
 }
 
-/* setup all colors used */
 void
 setup_colors()
 {
-   static char *color_names[] = { "red", "green", "blue", "yellow",
-      "magenta", "cyan", "white", "black" };
+  XRenderColor white   = { .red = 0xffff, .green = 0xffff,	.blue = 0xffff, .alpha = 0xffff };
+  XRenderColor red     = { .red = 0xffff, .green = 0x0,			.blue = 0x0,		.alpha = 0xffff };
+  XRenderColor green   = { .red = 0x0,    .green = 0xf000,	.blue = 0x0,		.alpha = 0xffff };
+  XRenderColor blue    = { .red = 0x0,    .green = 0x0,			.blue = 0xffff, .alpha = 0xffff };
+  XRenderColor yellow  = { .red = 0xffff, .green = 0xffff,	.blue = 0x0,		.alpha = 0xffff };
+  XRenderColor magenta = { .red = 0xffff, .green = 0x0,			.blue = 0xffff,	.alpha = 0xffff };
+  XRenderColor cyan    = { .red = 0x0,    .green = 0xffff,	.blue = 0xffff,	.alpha = 0xffff };
+  XRenderColor black   = { .red = 0x0,    .green = 0x0,			.blue = 0x0,		.alpha = 0xaaaa };
 
-   static XColor *xcolors[] = { &COLOR_RED, &COLOR_GREEN, &COLOR_BLUE,
-      &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_CYAN,
-      &COLOR_WHITE, &COLOR_BLACK };
-
-   const int num_colors = 8;
-   int i;
-   Colormap cm;
-
-   cm = DefaultColormap(XINFO.disp, 0);
-
-   for (i = 0; i < num_colors; i++) {
-      if (XParseColor(XINFO.disp, cm, color_names[i], xcolors[i]) == 0)
-         errx(1, "failed to parse color \"%s\"", color_names[i]);
-
-      if (XAllocColor(XINFO.disp, cm, xcolors[i]) == 0)
-         errx(1, "failed to allocate color \"%s\"", color_names[i]);
-   }
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &white, &COLOR_WHITE);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &red, &COLOR_RED);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &green, &COLOR_GREEN);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &blue, &COLOR_BLUE);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &yellow, &COLOR_YELLOW);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &magenta, &COLOR_MAGENTA);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &cyan, &COLOR_CYAN);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &black, &COLOR_BLACK);
 }
 
 /* setup x window */
@@ -253,7 +246,6 @@ setup_x(int x, int y, int w, int h, const char *font)
    XINFO.height = h;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
-   XINFO.gc     = DefaultGC(XINFO.disp, XINFO.screen);
    x11_window_attributes.override_redirect = 1;
 
    /* create window */
@@ -266,51 +258,30 @@ setup_x(int x, int y, int w, int h, const char *font)
       CWOverrideRedirect, &x11_window_attributes
    );
 
-   /* create pixmap used for double buffering */
-   XINFO.buf = XCreatePixmap(
-      XINFO.disp,  DefaultRootWindow(XINFO.disp),
-      XINFO.width, XINFO.height,
-      XINFO.depth
-   );
+	 XINFO.xftdraw = XftDrawCreate(XINFO.disp, XINFO.win, DefaultVisual(XINFO.disp,XINFO.screen),
+			                DefaultColormap( XINFO.disp, XINFO.screen ) );
 
    /* setup font */
-   XINFO.font = XLoadQueryFont(XINFO.disp, font);
+   XINFO.font = XftFontOpenName(XINFO.disp, XINFO.screen, font); 
    if (!XINFO.font)
-      errx(1, "XLoadQueryFont failed for \"%s\"", font);
-
-   XSetFont(XINFO.disp, XINFO.gc, XINFO.font->fid);
+     errx(1, "XLoadQueryFont failed for \"%s\"", font);
 
    /* connect window to display */
    XMapWindow(XINFO.disp, XINFO.win);
 
-   /* setup colors */
-   setup_colors();
-}
-
-/* draw a simple divider between rendered stats */
-int
-draw_divider(XColor color, int x, int width)
-{
-   XSetForeground(XINFO.disp, XINFO.gc, color.pixel);
-   XFillRectangle(XINFO.disp, XINFO.buf, XINFO.gc,
-      x + 1, 0, width, XINFO.height);
-
-   return width + 2;
+	 setup_colors();
 }
 
 /* draw all stats */
 void
 draw(int consolidate_cpus)
 {
-   XEvent dummy;
    static int spacing = 10;
    int x, y;
    int cpu;
-
+ 
    /* paint over the existing pixmap */
-   XSetForeground(XINFO.disp, XINFO.gc, BlackPixel(XINFO.disp, XINFO.screen));
-   XFillRectangle(XINFO.disp, XINFO.buf, XINFO.gc,
-      0, 0, XINFO.width, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR_BLACK, 0, 0, XINFO.width, XINFO.height);
 
    /* determine starting x and y */
    y = XINFO.height - XINFO.font->descent;
@@ -318,21 +289,17 @@ draw(int consolidate_cpus)
 
    /* start drawing stats */
    if (consolidate_cpus)
-      x += cpu_draw(-1, COLOR_WHITE, x, y) + spacing;
+      x += cpu_draw(-1, &COLOR_WHITE, x, y) + spacing;
    else
       for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
-         x += cpu_draw(cpu, COLOR_WHITE, x, y) + spacing;
+         x += cpu_draw(cpu, &COLOR_WHITE, x, y) + spacing;
 
-   x += mem_draw(COLOR_WHITE, x, y) + spacing;
-   x += procs_draw(COLOR_WHITE, x, y) + spacing;
-   x += power_draw(COLOR_WHITE, x, y) + spacing;
-   x += volume_draw(COLOR_WHITE, x, y) + spacing;
-   time_draw(COLOR_CYAN, x, y);
+   x += mem_draw(&COLOR_WHITE, x, y) + spacing;
+   x += procs_draw(&COLOR_WHITE, x, y) + spacing;
+   x += power_draw(&COLOR_WHITE, x, y) + spacing;
+   x += volume_draw(&COLOR_WHITE, x, y) + spacing;
+   time_draw(&COLOR_YELLOW, x, y);
 
-   /* copy the buffer to the window and flush */
-   XCopyArea(XINFO.disp, XINFO.buf, XINFO.win, XINFO.gc,
-      0, 0, XINFO.width, XINFO.height, 0, 0);
-   XNextEvent(XINFO.disp, &dummy);
    XFlush(XINFO.disp);
 }
 
