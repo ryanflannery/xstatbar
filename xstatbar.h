@@ -23,6 +23,7 @@
 #include <X11/Xft/Xft.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/shape.h>
+#include <X11/extensions/Xrandr.h>
 
 /* structure to wrap all necessary x stuff */
 typedef struct xinfo {

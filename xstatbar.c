@@ -230,6 +230,31 @@ setup_colors()
 	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &black, &COLOR_BLACK);
 }
 
+int
+calculate_width_of_default_screen()
+{
+	int nsizes;
+	XRRScreenSize* randrsize = XRRSizes(XINFO.disp, XINFO.screen, &nsizes);
+
+  if (nsizes != 0) {
+    Rotation current = 0;
+    XRRScreenConfiguration * sc;
+
+    sc = XRRGetScreenInfo (XINFO.disp, RootWindow (XINFO.disp, XINFO.screen));
+    int current_size = XRRConfigCurrentConfiguration (sc, &current);
+
+    if (current_size < nsizes) {
+
+      XRRRotations(XINFO.disp, XINFO.screen, &current);
+      randrsize += current_size;
+
+      bool rot = current & RR_Rotate_90 || current & RR_Rotate_270;
+      return rot ? randrsize->height : randrsize->width;
+		}
+  }
+  return DisplayWidth(XINFO.disp, XINFO.screen);
+}
+
 /* setup x window */
 void
 setup_x(int x, int y, int w, int h, const char *font)
@@ -244,11 +269,12 @@ setup_x(int x, int y, int w, int h, const char *font)
 
    /* setup various defaults/settings */
    XINFO.screen = DefaultScreen(XINFO.disp);
-   XINFO.width  = w ? w : DisplayWidth(XINFO.disp, XINFO.screen);
    XINFO.height = h;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
    x11_window_attributes.override_redirect = 0;
+
+   XINFO.width  = w ? w : calculate_width_of_default_screen();
 
    /* create window */
    XINFO.win = XCreateWindow(
