@@ -146,6 +146,7 @@ main (int argc, char *argv[])
 
       /* draw */
       draw(consolidate_cpus);
+			XSync(XINFO.disp, False);
 
       /* sleep */
       sleep(sleep_seconds);
@@ -195,6 +196,7 @@ void
 cleanup()
 {
    /* x teardown */
+   XdbeDeallocateBackBufferName(XINFO.disp, XINFO.backbuf);
    XClearWindow(XINFO.disp,   XINFO.win);
    XDestroyWindow(XINFO.disp, XINFO.win);
    XftDrawDestroy( XINFO.xftdraw );
@@ -272,9 +274,8 @@ setup_x(int x, int y, int w, int h, const char *font)
    XINFO.height = h;
    XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
    XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
-   x11_window_attributes.override_redirect = 0;
-
    XINFO.width  = w ? w : calculate_width_of_default_screen();
+	 x11_window_attributes.override_redirect = 1;
 
    /* create window */
    XINFO.win = XCreateWindow(
@@ -286,9 +287,6 @@ setup_x(int x, int y, int w, int h, const char *font)
       CWOverrideRedirect, &x11_window_attributes
    );
 
-	 XINFO.xftdraw = XftDrawCreate(XINFO.disp, XINFO.win, DefaultVisual(XINFO.disp,XINFO.screen),
-			                DefaultColormap( XINFO.disp, XINFO.screen ) );
-   
 	 /* setup window manager hints */
    type = XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
    XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE", False),
@@ -308,6 +306,11 @@ setup_x(int x, int y, int w, int h, const char *font)
    XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_STRUT_PARTIAL", False),
 		   XA_CARDINAL, 32, PropModeReplace, (unsigned char*)struts, 12);
 
+	 XINFO.backbuf = XdbeAllocateBackBufferName(XINFO.disp, XINFO.win, XdbeBackground);
+   XINFO.xftdraw = XftDrawCreate(XINFO.disp, XINFO.backbuf,
+                                 DefaultVisual(XINFO.disp,XINFO.screen),
+                                 DefaultColormap( XINFO.disp, XINFO.screen ) );
+
    /* setup font */
    XINFO.font = XftFontOpenName(XINFO.disp, XINFO.screen, font); 
    if (!XINFO.font)
@@ -320,6 +323,13 @@ setup_x(int x, int y, int w, int h, const char *font)
    setup_colors();
 }
 
+void
+swap_buf()
+{
+  XdbeSwapInfo swpinfo[1] = {{XINFO.win, XdbeBackground}};
+  XdbeSwapBuffers(XINFO.disp, swpinfo, 1);
+}
+
 /* draw all stats */
 void
 draw(int consolidate_cpus)
@@ -329,6 +339,7 @@ draw(int consolidate_cpus)
    int cpu;
  
    /* paint over the existing pixmap */
+   swap_buf();
    XftDrawRect(XINFO.xftdraw, &COLOR_BLACK, 0, 0, XINFO.width, XINFO.height);
 
    /* determine starting x and y */
@@ -348,6 +359,7 @@ draw(int consolidate_cpus)
    x += volume_draw(&COLOR_WHITE, x, y) + spacing;
    time_draw(&COLOR_YELLOW, x, y);
 
+   swap_buf();
    XFlush(XINFO.disp);
 }
 
