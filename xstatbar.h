@@ -44,8 +44,7 @@ extern xinfo_t XINFO;
 
 
 /* the actual x-color object globals */
-extern XftColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
-              COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-              COLOR_WHITE,  COLOR_BLACK;
+extern XftColor COLOR0, COLOR1, COLOR2, COLOR3,
+                COLOR4, COLOR5, COLOR6, COLOR7;
 
 #endif

@@ -220,13 +220,13 @@ volume_draw(XftColor *color, int x, int y)
    x += render_text(color, x, y, str) + 1;
 
    /* left graph */
-   XftDrawRect(XINFO.xftdraw, &COLOR_RED, x, 0, width, XINFO.height);
-   XftDrawRect(XINFO.xftdraw, &COLOR_GREEN, x, XINFO.height - lheight, width, lheight);
+   XftDrawRect(XINFO.xftdraw, &COLOR1, x, 0, width, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR2, x, XINFO.height - lheight, width, lheight);
    x += width + 1;
 
    /* right graph */
-   XftDrawRect(XINFO.xftdraw, &COLOR_RED, x, 0, width, XINFO.height);
-   XftDrawRect(XINFO.xftdraw, &COLOR_GREEN, x, XINFO.height - rheight, width, lheight);
+   XftDrawRect(XINFO.xftdraw, &COLOR1, x, 0, width, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR2, x, XINFO.height - rheight, width, lheight);
    x += width + 1;
 
    /* right volume % */
@@ -305,8 +305,8 @@ power_draw(XftColor *color, int x, int y)
 
    /* draw the graph */
    h = power.info.battery_life * XINFO.height / 100;
-   XftDrawRect(XINFO.xftdraw, &COLOR_RED, x, 0, width, XINFO.height);
-   XftDrawRect(XINFO.xftdraw, &COLOR_GREEN, x, XINFO.height - h, width, h);
+   XftDrawRect(XINFO.xftdraw, &COLOR1, x, 0, width, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR2, x, XINFO.height - h, width, h);
 
    x += width + 1;
 
@@ -506,7 +506,7 @@ cpu_draw(int cpu, XftColor *color, int x, int y)
    static char  str[1000];
    static char *cpuStateNames[] = { "u", "n", "s", "i", "I" };
    static XftColor *cpuStateColors[] = {
-     &COLOR_RED, &COLOR_BLUE, &COLOR_YELLOW, &COLOR_MAGENTA, &COLOR_GREEN
+     &COLOR1, &COLOR4, &COLOR3, &COLOR5, &COLOR2
    };
    int state, startx, time, col, h, i, j;
 
@@ -519,7 +519,7 @@ cpu_draw(int cpu, XftColor *color, int x, int y)
    x += render_text(color, x, y, str) + 1;
 
    /* for the graph, draw a green rectangle to start with */
-   XftDrawRect(XINFO.xftdraw, &COLOR_GREEN, x, 0, sysinfo.hist_size, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR2, x, 0, sysinfo.hist_size, XINFO.height);
 
    /* start adding every 'bar' to the bar-graph... */
    time = (sysinfo.current + 1) % sysinfo.hist_size;
@@ -535,7 +535,7 @@ cpu_draw(int cpu, XftColor *color, int x, int y)
       } else
          for (i = 0; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
       h = h * XINFO.height / 100;
-      XftDrawRect(XINFO.xftdraw, &COLOR_RED, x + col, XINFO.height - h, 1, h);
+      XftDrawRect(XINFO.xftdraw, &COLOR1, x + col, XINFO.height - h, 1, h);
 
       /* nice time */
       h = 0;
@@ -547,7 +547,7 @@ cpu_draw(int cpu, XftColor *color, int x, int y)
       } else
          for (i = 1; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
       h = h * XINFO.height / 100;
-      XftDrawRect(XINFO.xftdraw, &COLOR_BLUE, x + col, XINFO.height - h, 1, h);
+      XftDrawRect(XINFO.xftdraw, &COLOR4, x + col, XINFO.height - h, 1, h);
 
       /* system time */
       h = 0;
@@ -559,7 +559,7 @@ cpu_draw(int cpu, XftColor *color, int x, int y)
       } else
          for (i = 2; i < 4; i++) h += sysinfo.cpu_pcnts[cpu][time][i];
       h = h * XINFO.height / 100;
-      XftDrawRect(XINFO.xftdraw, &COLOR_YELLOW, x + col, XINFO.height - h, 1, h);
+      XftDrawRect(XINFO.xftdraw, &COLOR3, x + col, XINFO.height - h, 1, h);
 
       /* interrupt time */
       if (cpu == -1) {
@@ -569,7 +569,7 @@ cpu_draw(int cpu, XftColor *color, int x, int y)
       } else
          h = sysinfo.cpu_pcnts[cpu][time][3];
       h = h * XINFO.height / 100;
-      XftDrawRect(XINFO.xftdraw, &COLOR_MAGENTA, x + col, XINFO.height - h, 1, h);
+      XftDrawRect(XINFO.xftdraw, &COLOR5, x + col, XINFO.height - h, 1, h);
       time = (time + 1) % sysinfo.hist_size;
    }
 
@@ -613,7 +613,7 @@ mem_draw(XftColor *color, int x, int y)
    x += render_text(color, x, y, "mem: ") + 1;
 
    /* green bg for graph */
-   XftDrawRect(XINFO.xftdraw, &COLOR_GREEN, x, 0, sysinfo.hist_size, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR2, x, 0, sysinfo.hist_size, XINFO.height);
 
    /* start drawing each bar in the bar-graph */
    time = (sysinfo.current + 1) % sysinfo.hist_size;
@@ -628,11 +628,11 @@ mem_draw(XftColor *color, int x, int y)
         h = (sysinfo.memory[time][MEM_TOT] + sysinfo.memory[time][MEM_ACT])
           * XINFO.height / total;
 
-        XftDrawRect(XINFO.xftdraw, &COLOR_YELLOW, x + col, XINFO.height - h, 1, h);
+        XftDrawRect(XINFO.xftdraw, &COLOR3, x + col, XINFO.height - h, 1, h);
 
         /* draw red (active) bar */
         h = sysinfo.memory[time][MEM_ACT] * XINFO.height / total;
-        XftDrawRect(XINFO.xftdraw, &COLOR_RED, x + col, XINFO.height - h, 1, h);
+        XftDrawRect(XINFO.xftdraw, &COLOR1, x + col, XINFO.height - h, 1, h);
       }
 
       time = (time + 1) % sysinfo.hist_size;
@@ -640,18 +640,18 @@ mem_draw(XftColor *color, int x, int y)
    x += sysinfo.hist_size + 1;
 
    /* draw numbers */
-   x += render_text(&COLOR_RED, x, y, fmtmem(sysinfo.memory[cur][MEM_ACT]));
+   x += render_text(&COLOR1, x, y, fmtmem(sysinfo.memory[cur][MEM_ACT]));
    x += render_text(color, x, y, "/");
-   x += render_text(&COLOR_YELLOW, x, y, fmtmem(sysinfo.memory[cur][MEM_TOT]));
+   x += render_text(&COLOR3, x, y, fmtmem(sysinfo.memory[cur][MEM_TOT]));
    x += render_text(color, x, y, "/");
-   x += render_text(&COLOR_GREEN, x, y, fmtmem(sysinfo.memory[cur][MEM_FRE]));
+   x += render_text(&COLOR2, x, y, fmtmem(sysinfo.memory[cur][MEM_FRE]));
 
    /* draw swap, if any is used */
    if (sysinfo.swap_used > 0) {
       x += render_text(color, x, y, " swap:");
-      x += render_text(&COLOR_RED, x, y, fmtmem(sysinfo.swap_used));
+      x += render_text(&COLOR1, x, y, fmtmem(sysinfo.swap_used));
       x += render_text(color, x, y, "/");
-      x += render_text(&COLOR_GREEN, x, y, fmtmem(sysinfo.swap_total));
+      x += render_text(&COLOR2, x, y, fmtmem(sysinfo.swap_total));
    }
 
    return x - startx;
@@ -669,13 +669,13 @@ procs_draw(XftColor *color, int x, int y)
    /* FIXME finish getting the number of active processes
     * i, personally, like this...
    snprintf(str, sizeof(str), "%d", sysinfo.procs_active);
-   x += render_text(COLOR_RED, x, y, str);
+   x += render_text(COLOR1, x, y, str);
 
    x += render_text(color, x, y, "/");
    */
 
    snprintf(str, sizeof(str), "%d", sysinfo.procs_total);
-   x += render_text(&COLOR_RED, x, y, str);
+   x += render_text(&COLOR1, x, y, str);
 
    return x - startx;
 }

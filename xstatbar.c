@@ -29,9 +29,8 @@
 /* extern's from xstatbar.h */
 xinfo_t  XINFO;
 
-XftColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
-         COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-         COLOR_WHITE,  COLOR_BLACK;
+XftColor COLOR0, COLOR1, COLOR2, COLOR3,
+         COLOR4, COLOR5, COLOR6, COLOR7;
 
 /* signal flags */
 volatile sig_atomic_t VSIG_QUIT = 0;
@@ -222,14 +221,14 @@ setup_colors()
   XRenderColor cyan    = { .red = 0x0,    .green = 0xffff,	.blue = 0xffff,	.alpha = 0xffff };
   XRenderColor black   = { .red = 0x0,    .green = 0x0,			.blue = 0x0,		.alpha = 0xaaaa };
 
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &white, &COLOR_WHITE);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &red, &COLOR_RED);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &green, &COLOR_GREEN);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &blue, &COLOR_BLUE);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &yellow, &COLOR_YELLOW);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &magenta, &COLOR_MAGENTA);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &cyan, &COLOR_CYAN);
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &black, &COLOR_BLACK);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &black,   &COLOR0);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &red,     &COLOR1);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &green,   &COLOR2);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &yellow,  &COLOR3);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &blue,    &COLOR4);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &magenta, &COLOR5);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &cyan,    &COLOR6);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &white,   &COLOR7);
 }
 
 int
@@ -340,7 +339,8 @@ draw(int consolidate_cpus)
  
    /* paint over the existing pixmap */
    swap_buf();
-   XftDrawRect(XINFO.xftdraw, &COLOR_BLACK, 0, 0, XINFO.width, XINFO.height);
+   XftDrawRect(XINFO.xftdraw, &COLOR0, 0, 0, XINFO.width, XINFO.height);
+
 
    /* determine starting x and y */
    y = XINFO.height - XINFO.font->descent;
@@ -348,16 +348,16 @@ draw(int consolidate_cpus)
 
    /* start drawing stats */
    if (consolidate_cpus)
-      x += cpu_draw(-1, &COLOR_WHITE, x, y) + spacing;
+      x += cpu_draw(-1, &COLOR7, x, y) + spacing;
    else
       for (cpu = 0; cpu < sysinfo.ncpu; cpu++)
-         x += cpu_draw(cpu, &COLOR_WHITE, x, y) + spacing;
+         x += cpu_draw(cpu, &COLOR7, x, y) + spacing;
 
-   x += mem_draw(&COLOR_WHITE, x, y) + spacing;
-   x += procs_draw(&COLOR_WHITE, x, y) + spacing;
-   x += power_draw(&COLOR_WHITE, x, y) + spacing;
-   x += volume_draw(&COLOR_WHITE, x, y) + spacing;
-   time_draw(&COLOR_YELLOW, x, y);
+   x += mem_draw(&COLOR7, x, y) + spacing;
+   x += procs_draw(&COLOR7, x, y) + spacing;
+   x += power_draw(&COLOR7, x, y) + spacing;
+   x += volume_draw(&COLOR7, x, y) + spacing;
+   time_draw(&COLOR3, x, y);
 
    swap_buf();
    XFlush(XINFO.disp);
