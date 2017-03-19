@@ -22,6 +22,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/shape.h>
+#include <X11/extensions/Xdbe.h>
 
 /* structure to wrap all necessary x stuff */
 typedef struct xinfo {
@@ -29,7 +30,8 @@ typedef struct xinfo {
    Window         win;
    Visual        *vis;
    XftFont       *font;
-   XftDraw	 *xftdraw;
+   XftDraw			 *xftdraw;
+   XdbeBackBuffer backbuf;
 
    int            screen;
    int            depth;
