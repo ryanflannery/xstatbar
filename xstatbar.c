@@ -223,10 +223,30 @@ get_resource(const char *resource)
 #define RESNAME "XStatBar"
 	snprintf(name, sizeof(name), "%s.%s", RESNAME, resource);
 	snprintf(class, sizeof(class), "%s.%s", RESCLASS, resource);
+	printf("Name: %s \n", name);
 	XrmGetResource(XINFO.xrdb, name, class, &type, &value);
 	if (value.addr)
 		return value.addr;
 	return NULL;
+}
+
+XRenderColor *
+calc_color(const char *name, XRenderColor *def)
+{
+  const char *color;
+	color = get_resource(name);
+
+	if (color) {
+    if (color[0] == '#') {
+			printf("HEX COLOR\n");
+    } else {
+			printf("LOOKUP\n");
+		}
+	} else {
+    printf("No resource\n");
+	}
+
+	return def;
 }
 
 /* setup all colors used */
@@ -242,7 +262,7 @@ setup_colors()
   XRenderColor cyan    = { .red = 0x0,    .green = 0xffff,	.blue = 0xffff,	.alpha = 0xffff };
   XRenderColor black   = { .red = 0x0,    .green = 0x0,			.blue = 0x0,		.alpha = 0xaaaa };
 
-	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &black,   &COLOR0);
+	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), calc_color("color0", &black),   &COLOR0);
 	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &red,     &COLOR1);
 	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &green,   &COLOR2);
 	XftColorAllocValue(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &yellow,  &COLOR3);
@@ -303,6 +323,9 @@ setup_x(int x, int y, int w, int h, const char *font)
       xrms = XResourceManagerString(XINFO.disp);
       if (xrms)
          XINFO.xrdb = XrmGetStringDatabase(xrms);
+			else
+				printf("No xrdb\n");
+
    }
 
    /* create window */
