@@ -200,7 +200,6 @@ cleanup()
   XClearWindow(XINFO.disp,   XINFO.win);
   XDestroyWindow(XINFO.disp, XINFO.win);
   XftDrawDestroy( XINFO.xftdraw );
-  XCloseDisplay(XINFO.disp);
 
   XftColorFree(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &COLOR0);
   XftColorFree(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &COLOR1);
@@ -211,6 +210,7 @@ cleanup()
   XftColorFree(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &COLOR6);
   XftColorFree(XINFO.disp, XINFO.vis, DefaultColormap( XINFO.disp, XINFO.screen ), &COLOR7);
 
+  XCloseDisplay(XINFO.disp);
 
   /* stats teardown */
   volume_close();
