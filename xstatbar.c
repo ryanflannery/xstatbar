@@ -348,75 +348,76 @@ calculate_width_of_default_screen()
 void
 setup_x(int x, int y, int w, int h, const char *font)
 {
-   XSetWindowAttributes x11_window_attributes;
-   Atom type;
-   unsigned long struts[12];
-   char *xrms = NULL;
+  XSetWindowAttributes x11_window_attributes;
+  Atom type;
+  unsigned long struts[12];
+  char *xrms = NULL;
 
-   /* open display */
-   if (!(XINFO.disp = XOpenDisplay(NULL)))
+  /* open display */
+  if (!(XINFO.disp = XOpenDisplay(NULL)))
       errx(1, "can't open X11 display.");
-   /* initialize resource manager */
-   XrmInitialize();
-   /* setup various defaults/settings */
-   XINFO.screen = DefaultScreen(XINFO.disp);
-   XINFO.height = h;
-   XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
-   XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
-   XINFO.width  = w ? w : calculate_width_of_default_screen();
-   x11_window_attributes.override_redirect = 1;
+  /* initialize resource manager */
+  XrmInitialize();
+  /* setup various defaults/settings */
+  XINFO.screen = DefaultScreen(XINFO.disp);
+  XINFO.height = h;
+  XINFO.depth  = DefaultDepth(XINFO.disp, XINFO.screen);
+  XINFO.vis    = DefaultVisual(XINFO.disp, XINFO.screen);
+  XINFO.width  = w ? w : calculate_width_of_default_screen();
+  x11_window_attributes.override_redirect = 1;
 
-   if(!(XINFO.xrdb = XrmGetDatabase(XINFO.disp))) {
-      xrms = XResourceManagerString(XINFO.disp);
-      if (xrms)
-         XINFO.xrdb = XrmGetStringDatabase(xrms);
+  if(!(XINFO.xrdb = XrmGetDatabase(XINFO.disp))) {
+    xrms = XResourceManagerString(XINFO.disp);
+    if (xrms)
+      XINFO.xrdb = XrmGetStringDatabase(xrms);
 
-   }
+  }
 
-   /* create window */
-   XINFO.win = XCreateWindow(
-      XINFO.disp, DefaultRootWindow(XINFO.disp),
-      x, y,
-      XINFO.width, XINFO.height,
-      1,
-      CopyFromParent, InputOutput, XINFO.vis,
-      CWOverrideRedirect, &x11_window_attributes
-   );
+  /* create window */
+  XINFO.win = XCreateWindow(
+    XINFO.disp, DefaultRootWindow(XINFO.disp),
+    x, y,
+    XINFO.width, XINFO.height,
+    1,
+    CopyFromParent, InputOutput, XINFO.vis,
+    CWOverrideRedirect, &x11_window_attributes
+  );
 
-   /* setup window manager hints */
-   type = XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
-   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE", False),
+  /* setup window manager hints */
+  type = XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE_DOCK", False);
+  XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_WINDOW_TYPE", False),
        XA_ATOM, 32, PropModeReplace, (unsigned char*)&type, 1);
-   bzero(struts, sizeof(struts));
-   enum { left, right, top, bottom, left_start_y, left_end_y, right_start_y,
+  bzero(struts, sizeof(struts));
+  enum { left, right, top, bottom, left_start_y, left_end_y, right_start_y,
     right_end_y, top_start_x, top_end_x, bottom_start_x, bottom_end_x };
-   if (y <= DisplayHeight(XINFO.disp, XINFO.screen)/2) {
-     struts[top] = y + XINFO.height;
-     struts[top_start_x] = x;
-     struts[top_end_x] = x + XINFO.width;
-   } else {
-     struts[bottom] = DisplayHeight(XINFO.disp, XINFO.screen) - y;
-     struts[bottom_start_x] = x;
-     struts[bottom_end_x] = x + XINFO.width;
-   }
-   XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_STRUT_PARTIAL", False),
+  if (y <= DisplayHeight(XINFO.disp, XINFO.screen)/2) {
+    struts[top] = y + XINFO.height;
+    struts[top_start_x] = x;
+    struts[top_end_x] = x + XINFO.width;
+  } else {
+    struts[bottom] = DisplayHeight(XINFO.disp, XINFO.screen) - y;
+    struts[bottom_start_x] = x;
+    struts[bottom_end_x] = x + XINFO.width;
+  }
+  XChangeProperty(XINFO.disp, XINFO.win, XInternAtom(XINFO.disp, "_NET_WM_STRUT_PARTIAL", False),
        XA_CARDINAL, 32, PropModeReplace, (unsigned char*)struts, 12);
 
-   XINFO.backbuf = XdbeAllocateBackBufferName(XINFO.disp, XINFO.win, XdbeBackground);
-   XINFO.xftdraw = XftDrawCreate(XINFO.disp, XINFO.backbuf,
+  XINFO.backbuf = XdbeAllocateBackBufferName(XINFO.disp, XINFO.win, XdbeBackground);
+  XINFO.xftdraw = XftDrawCreate(XINFO.disp, XINFO.backbuf,
                                  DefaultVisual(XINFO.disp,XINFO.screen),
                                  DefaultColormap( XINFO.disp, XINFO.screen ) );
 
-   /* setup font */
-   XINFO.font = XftFontOpenName(XINFO.disp, XINFO.screen, font); 
-   if (!XINFO.font)
-     errx(1, "XLoadQueryFont failed for \"%s\"", font);
+  /* setup font */
+  XINFO.font = XftFontOpenName(XINFO.disp, XINFO.screen, font); 
+  if (!XINFO.font)
+    errx(1, "XLoadQueryFont failed for \"%s\"", font);
 
-   /* connect window to display */
-   XMapWindow(XINFO.disp, XINFO.win);
+  /* connect window to display */
+  XMapWindow(XINFO.disp, XINFO.win);
 
-   XMoveWindow(XINFO.disp, XINFO.win, x, y);
-   setup_colors();
+  XMoveWindow(XINFO.disp, XINFO.win, x, y);
+   
+  setup_colors();
 }
 
 void
