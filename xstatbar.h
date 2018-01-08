@@ -20,16 +20,22 @@
 /* X */
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xft/Xft.h>
+#include <X11/Xatom.h>
+#include <X11/Xresource.h>
 #include <X11/extensions/shape.h>
+#include <X11/extensions/Xdbe.h>
+#include <X11/extensions/Xrandr.h>
 
 /* structure to wrap all necessary x stuff */
 typedef struct xinfo {
    Display       *disp;
    Window         win;
-   Pixmap         buf;     /* for double buffering */
    Visual        *vis;
-   GC             gc;
-   XFontStruct   *font;
+   XftFont       *font;
+   XftDraw			 *xftdraw;
+   XdbeBackBuffer backbuf;
+   XrmDatabase    xrdb;
 
    int            screen;
    int            depth;
@@ -40,8 +46,7 @@ extern xinfo_t XINFO;
 
 
 /* the actual x-color object globals */
-extern XColor COLOR_RED,    COLOR_GREEN,   COLOR_BLUE,
-              COLOR_YELLOW, COLOR_MAGENTA, COLOR_CYAN,
-              COLOR_WHITE,  COLOR_BLACK;
+extern XftColor COLOR0, COLOR1, COLOR2, COLOR3,
+                COLOR4, COLOR5, COLOR6, COLOR7;
 
 #endif
