@@ -48,7 +48,7 @@ main (int argc, char *argv[])
 {
    const char *errstr;
    char *font;
-   char  ch;
+   int  ch;
    int   x, y, w, h;
    int   sleep_seconds;
    int   consolidate_cpus = 0;
